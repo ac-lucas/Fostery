@@ -2,36 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foster Care Companion - Pet & Kitten Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fostery - Foster Pet Tracker</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts (Inter & Fredoka for cozy pet feel) -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK (Compatibility Web Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#fffbeb',
-                            100: '#fef3c7',
-                            200: '#fde68a',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                            700: '#b45309',
-                        },
                         cozy: {
                             bg: '#FAF7F2',
                             card: '#FFFFFF',
                             sage: '#84A59D',
+                            sageDark: '#6B8E85',
                             coral: '#F28482',
                             cream: '#F7EDE2',
                             text: '#4A4E69',
@@ -52,13 +50,14 @@
             background-color: #FAF7F2;
             color: #2B2D42;
             font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         h1, h2, h3, .font-display {
             font-family: 'Fredoka', cursive;
         }
         .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #F7EDE2;
@@ -73,162 +72,200 @@
             color: #84A59D;
             font-weight: 600;
         }
+        .safe-area-pb {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col pb-20 lg:pb-0">
 
-    <!-- Top Navigation Header -->
     <header class="bg-white border-b border-amber-100 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <!-- Logo & Title -->
+                <!-- App Logo & Title -->
                 <div class="flex items-center space-x-3">
-                    <div class="bg-cozy-sage text-white p-2.5 rounded-2xl shadow-sm">
-                        <i class="fa-solid me-0 fa-paw text-xl"></i>
+                    <div class="bg-cozy-sage text-white p-2 sm:p-2.5 rounded-2xl shadow-sm">
+                        <i class="fa-solid fa-paw text-lg sm:text-xl"></i>
                     </div>
                     <div>
-                        <span class="font-display text-xl sm:text-2xl font-bold text-cozy-darkText tracking-wide">Foster Care <span class="text-cozy-sage">Companion</span></span>
-                        <p class="text-xs text-gray-500 hidden sm:block">Track, nurture, and celebrate your foster journey</p>
+                        <span class="font-display text-xl sm:text-2xl font-bold text-cozy-darkText tracking-wide">Fostery</span>
+                        <p class="text-[11px] text-gray-500 hidden sm:block">Foster Pet Tracker & Cloud Log</p>
                     </div>
                 </div>
 
-                <!-- Action Controls -->
-                <div class="flex items-center space-x-3">
-                    <button id="addPetBtn" onclick="openPetModal()" class="bg-cozy-sage hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm flex items-center space-x-2">
-                        <i class="fa-solid fa-plus"></i>
-                        <span>New Foster</span>
+                <!-- Right Header Actions & User Auth State -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- User Auth Info Pill -->
+                    <div id="userInfoPill" class="hidden flex items-center space-x-2 bg-cozy-cream/80 px-2.5 py-1 rounded-full text-xs font-medium text-cozy-darkText border border-amber-200">
+                        <img id="userAvatar" src="" class="w-6 h-6 rounded-full object-cover border border-cozy-sage" alt="User Avatar">
+                        <span id="userName" class="max-w-[100px] sm:max-w-[140px] truncate">---</span>
+                        <button onclick="handleSignOut()" title="Sign Out" class="text-gray-400 hover:text-red-500 ml-1">
+                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Sign In Button (When logged out) -->
+                    <button id="googleSignInBtn" onclick="handleGoogleSignIn()" class="hidden bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center space-x-2">
+                        <i class="fa-brands fa-google text-red-500"></i>
+                        <span>Google Sign In</span>
                     </button>
-                    <button onclick="exportData()" title="Export Data JSON" class="p-2 text-gray-600 hover:text-cozy-sage hover:bg-gray-100 rounded-xl transition">
-                        <i class="fa-solid fa-file-export"></i>
+
+                    <button id="addPetHeaderBtn" onclick="openPetModal()" class="bg-cozy-sage hover:bg-cozy-sageDark text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center space-x-1.5">
+                        <i class="fa-solid fa-plus"></i>
+                        <span class="hidden sm:inline">New Foster</span>
+                        <span class="sm:hidden">Add</span>
                     </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div id="authOverlayScreen" class="hidden fixed inset-0 bg-cozy-bg/95 z-40 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-lg border border-amber-100 text-center space-y-6">
+            <div class="w-20 h-20 bg-cozy-cream text-cozy-sage rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+                <i class="fa-solid fa-shield-cat"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-cozy-darkText">Welcome to Fostery</h2>
+                <p class="text-gray-500 text-xs sm:text-sm mt-2">Sign in with your authorized Google Account to access your foster database in Realtime Database.</p>
+            </div>
+            <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-2xl border border-gray-300 shadow-sm flex items-center justify-center space-x-3 transition">
+                <i class="fa-brands fa-google text-red-500 text-lg"></i>
+                <span>Sign in with Google</span>
+            </button>
+            <p class="text-[11px] text-gray-400">Database permissions are restricted to your registered Google UID.</p>
+        </div>
+    </div>
 
-        <!-- Top Roster & Filter Bar -->
-        <div class="mb-6 bg-white p-4 rounded-2xl shadow-sm border border-amber-50">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <!-- Roster Filters -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+
+        <!-- Roster Filter & Pet Picker Header Bar -->
+        <div class="mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-amber-50">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <!-- Roster Status Filter Pills -->
                 <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 custom-scrollbar">
-                    <button onclick="filterStatus('all')" id="filter-all" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-cozy-sage text-white">All Fosters (<span id="count-all">0</span>)</button>
-                    <button onclick="filterStatus('Active Foster')" id="filter-active" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">Active (<span id="count-active">0</span>)</button>
-                    <button onclick="filterStatus('Ready for Adoption')" id="filter-ready" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">Ready (<span id="count-ready">0</span>)</button>
-                    <button onclick="filterStatus('Adopted')" id="filter-adopted" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">Adopted (<span id="count-adopted">0</span>)</button>
+                    <button onclick="filterStatus('all')" id="filter-all" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap">All (<span id="count-all">0</span>)</button>
+                    <button onclick="filterStatus('Incoming')" id="filter-incoming" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Incoming (<span id="count-incoming">0</span>)</button>
+                    <button onclick="filterStatus('Current')" id="filter-current" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Current (<span id="count-current">0</span>)</button>
+                    <button onclick="filterStatus('Former')" id="filter-former" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Former (<span id="count-former">0</span>)</button>
                 </div>
 
-                <!-- Foster Selector Dropdown (for active profile focus) -->
+                <!-- Pet Selector Dropdown (Quick Switcher) -->
                 <div class="flex items-center space-x-2">
-                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Viewing:</label>
-                    <select id="activePetSelect" onchange="selectActivePet(this.value)" class="bg-cozy-cream text-cozy-darkText border-none text-sm font-medium rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none cursor-pointer">
-                        <!-- Populated by JS -->
+                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Active:</label>
+                    <select id="activePetSelect" onchange="selectActivePet(this.value)" class="w-full md:w-auto bg-cozy-cream text-cozy-darkText border-none text-xs sm:text-sm font-medium rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none cursor-pointer">
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- Main View Split Panel -->
+        <!-- Main Grid Container -->
         <div id="mainDashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            <!-- Left Sidebar / Pet Selector Card Stack (4 Cols) -->
-            <div class="lg:col-span-4 space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-cozy-darkText">Foster Roster</h2>
-                    <span class="text-xs text-gray-500">Select a profile to log details</span>
+            <!-- Left Sidebar Roster List -->
+            <div id="rosterSidebar" class="lg:col-span-4 space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-base sm:text-lg font-bold text-cozy-darkText">Foster Roster</h2>
+                    <span id="syncStatusBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Firebase Synced
+                    </span>
                 </div>
 
-                <div id="rosterCardsList" class="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar pr-1">
-                    <!-- Roster items populated via JS -->
+                <div id="rosterCardsList" class="space-y-2.5 max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar pr-1">
                 </div>
             </div>
 
-            <!-- Right Detail Workspace (8 Cols) -->
-            <div class="lg:col-span-8">
-                <div id="noPetSelectedView" class="hidden bg-white rounded-3xl p-12 text-center border border-dashed border-gray-300 shadow-sm">
-                    <div class="w-20 h-20 bg-amber-50 text-cozy-sage rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+            <!-- Right Detail Workspace -->
+            <div id="detailWorkspace" class="lg:col-span-8">
+
+                <!-- Empty State View -->
+                <div id="noPetSelectedView" class="hidden bg-white rounded-3xl p-8 sm:p-12 text-center border border-dashed border-gray-300 shadow-sm">
+                    <div class="w-16 sm:w-20 h-16 sm:h-20 bg-amber-50 text-cozy-sage rounded-full flex items-center justify-center mx-auto mb-4 text-2xl sm:text-3xl">
                         <i class="fa-solid fa-cat"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-700 mb-2">No Foster Pet Selected</h3>
-                    <p class="text-gray-500 text-sm max-w-md mx-auto mb-6">Select a foster pet from the roster list on the left, or add a new kitten or pet profile to start tracking!</p>
-                    <button onclick="openPetModal()" class="bg-cozy-sage text-white px-5 py-2.5 rounded-xl font-medium shadow hover:bg-teal-700 transition">
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-700 mb-2">No Foster Pet Selected</h3>
+                    <p class="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mb-6">Select a foster pet from your roster, or create a new profile to start logging weights and care routines.</p>
+                    <button onclick="openPetModal()" class="bg-cozy-sage text-white px-5 py-2.5 rounded-xl font-medium shadow hover:bg-cozy-sageDark transition text-xs sm:text-sm">
                         <i class="fa-solid fa-plus mr-2"></i>Add First Foster
                     </button>
                 </div>
 
-                <div id="petDetailWorkspace" class="space-y-6">
+                <!-- Active Foster Workstation -->
+                <div id="petDetailWorkspace" class="space-y-4 sm:space-y-6">
 
-                    <!-- Active Pet Card Header -->
-                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-50 relative overflow-hidden">
+                    <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-amber-50 relative">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div class="flex items-center space-x-4">
-                                <img id="detailImg" src="" alt="Pet Avatar" class="w-20 h-20 rounded-2xl object-cover border-2 border-cozy-sage shadow-sm">
+                            <div class="flex items-start sm:items-center space-x-3 sm:space-x-4">
+                                <img id="detailImg" src="" alt="Pet Avatar" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-cozy-sage shadow-sm bg-gray-100 flex-shrink-0">
                                 <div>
-                                    <div class="flex items-center space-x-3">
-                                        <h2 id="detailName" class="text-2xl font-bold text-cozy-darkText">---</h2>
-                                        <span id="detailStatusBadge" class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h2 id="detailName" class="text-xl sm:text-2xl font-bold text-cozy-darkText">---</h2>
+                                        <span id="detailStatusBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">Current</span>
                                     </div>
-                                    <p id="detailBreedAge" class="text-sm text-gray-500 mt-1">Domestic Shorthair • ~4 Weeks</p>
-                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mt-2">
+                                    <p id="detailBreedAge" class="text-xs sm:text-sm text-gray-500 mt-0.5">Kitten • ~4 Weeks</p>
+
+                                    <!-- Sibling / Littermate Tags Display -->
+                                    <div id="siblingsBadgeContainer" class="mt-2 flex flex-wrap items-center gap-1.5">
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] sm:text-xs text-gray-600 mt-2">
                                         <span><i class="fa-solid fa-calendar-check text-cozy-sage mr-1"></i>Intake: <strong id="detailIntake">---</strong></span>
                                         <span><i class="fa-solid fa-bullseye text-cozy-coral mr-1"></i>Target: <strong id="detailTarget">---</strong></span>
-                                        <span><i class="fa-solid fa-microchip text-indigo-400 mr-1"></i>Chip #: <strong id="detailMicrochip">---</strong></span>
+                                        <span><i class="fa-solid fa-microchip text-indigo-400 mr-1"></i>Microchip: <strong id="detailMicrochip">---</strong></span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex items-center space-x-2 self-end sm:self-center">
-                                <button onclick="editCurrentPet()" class="p-2.5 bg-gray-100 hover:bg-cozy-cream text-gray-700 rounded-xl text-sm transition" title="Edit Profile">
+                            <div class="flex items-center space-x-2 self-end sm:self-start">
+                                <button onclick="editCurrentPet()" class="p-2 sm:p-2.5 bg-gray-100 hover:bg-cozy-cream text-gray-700 rounded-xl text-xs sm:text-sm transition" title="Edit Profile">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <button onclick="deleteCurrentPet()" class="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm transition" title="Delete Profile">
+                                <button onclick="deleteCurrentPet()" class="p-2 sm:p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs sm:text-sm transition" title="Delete Profile">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Tab Nav for Details -->
-                        <div class="flex border-b border-gray-200 mt-6 gap-6 text-sm font-medium">
-                            <button onclick="switchTab('dailyLog')" id="tab-dailyLog" class="pb-3 tab-active transition flex items-center gap-2">
+                        <!-- Tab Bar Header Navigation -->
+                        <div class="flex border-b border-gray-200 mt-5 gap-4 sm:gap-6 text-xs sm:text-sm font-medium overflow-x-auto custom-scrollbar">
+                            <button onclick="switchTab('dailyLog')" id="tab-dailyLog" class="pb-2.5 tab-active transition flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fa-solid fa-chart-line"></i> Daily Logs & Weight
                             </button>
-                            <button onclick="switchTab('schedule')" id="tab-schedule" class="pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-days"></i> Care & Med Schedule
+                            <button onclick="switchTab('schedule')" id="tab-schedule" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="fa-solid fa-calendar-days"></i> Care Schedule
                             </button>
-                            <button onclick="switchTab('milestones')" id="tab-milestones" class="pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2">
-                                <i class="fa-solid fa-award"></i> Milestones
+                            <button onclick="switchTab('milestones')" id="tab-milestones" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="fa-solid fa-award"></i> Kitten Milestones
                             </button>
-                            <button onclick="switchTab('medical')" id="tab-medical" class="pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2">
+                            <button onclick="switchTab('medical')" id="tab-medical" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fa-solid fa-notes-medical"></i> Medical Notes
                             </button>
                         </div>
                     </div>
 
-                    <!-- TAB 1: Daily Log & Weight Tracker -->
-                    <div id="pane-dailyLog" class="tab-pane space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                            <!-- Quick Daily Entry Form (5 cols) -->
-                            <div class="md:col-span-5 bg-white p-5 rounded-3xl shadow-sm border border-amber-50">
-                                <h3 class="text-base font-bold text-cozy-darkText mb-4 flex items-center gap-2">
-                                    <i class="fa-solid fa-plus-circle text-cozy-sage"></i> Log Today's Entry
+                    <!-- TAB 1: Daily Log & Weight Chart -->
+                    <div id="pane-dailyLog" class="tab-pane space-y-4 sm:space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
+                            <!-- Daily Entry Form -->
+                            <div class="md:col-span-5 bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-amber-50">
+                                <h3 class="text-sm sm:text-base font-bold text-cozy-darkText mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-plus-circle text-cozy-sage"></i> Log Entry
                                 </h3>
 
                                 <form id="dailyLogForm" onsubmit="saveDailyLog(event)" class="space-y-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Date & Time</label>
-                                        <input type="datetime-local" id="logDateTime" required class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">Date & Time</label>
+                                        <input type="datetime-local" id="logDateTime" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                     </div>
 
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Weight</label>
-                                            <input type="number" step="0.1" id="logWeight" placeholder="e.g. 450" required class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Weight</label>
+                                            <input type="number" step="0.1" id="logWeight" placeholder="e.g. 450" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                         </div>
                                         <div>
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Unit</label>
-                                            <select id="logWeightUnit" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Unit</label>
+                                            <select id="logWeightUnit" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                                 <option value="g">Grams (g)</option>
                                                 <option value="oz">Ounces (oz)</option>
                                                 <option value="lbs">Pounds (lbs)</option>
@@ -237,14 +274,14 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Food Intake</label>
-                                        <input type="text" id="logFood" placeholder="e.g. 15ml Formula / 20g Wet" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">Food Intake</label>
+                                        <input type="text" id="logFood" placeholder="e.g. 15ml Formula / 20g Wet" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                     </div>
 
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Bowel / Litter</label>
-                                            <select id="logBowel" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Litter Box</label>
+                                            <select id="logBowel" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                                 <option value="Normal">Normal</option>
                                                 <option value="Soft / Loose">Soft / Loose</option>
                                                 <option value="Diarrhea">Diarrhea</option>
@@ -252,8 +289,8 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Demeanor</label>
-                                            <select id="logDemeanor" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Demeanor</label>
+                                            <select id="logDemeanor" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                                 <option value="Playful & Active">Playful & Active</option>
                                                 <option value="Calm & Content">Calm & Content</option>
                                                 <option value="Sleepy / Lethargic">Sleepy / Lethargic</option>
@@ -263,129 +300,134 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
-                                        <textarea id="logNotes" rows="2" placeholder="Any special observations..." class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none"></textarea>
+                                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">Notes</label>
+                                        <textarea id="logNotes" rows="2" placeholder="Observations..." class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none"></textarea>
                                     </div>
 
-                                    <button type="submit" class="w-full bg-cozy-sage hover:bg-teal-700 text-white font-medium py-2 rounded-xl text-sm transition shadow-sm">
-                                        Save Daily Entry
+                                    <button type="submit" class="w-full bg-cozy-sage hover:bg-cozy-sageDark text-white font-medium py-2 rounded-xl text-xs sm:text-sm transition shadow-sm">
+                                        Save Entry
                                     </button>
                                 </form>
                             </div>
 
-                            <!-- Weight Trend Chart (7 cols) -->
-                            <div class="md:col-span-7 bg-white p-5 rounded-3xl shadow-sm border border-amber-50 flex flex-col justify-between">
-                                <div class="flex justify-between items-center mb-3">
-                                    <h3 class="text-base font-bold text-cozy-darkText flex items-center gap-2">
-                                        <i class="fa-solid fa-chart-area text-cozy-coral"></i> Growth & Weight Trend
+                            <!-- Growth Chart -->
+                            <div class="md:col-span-7 bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-amber-50 flex flex-col justify-between">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-sm sm:text-base font-bold text-cozy-darkText flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-area text-cozy-coral"></i> Weight Chart
                                     </h3>
-                                    <span class="text-xs text-gray-400">Target Line shown</span>
+                                    <span class="text-[10px] sm:text-xs text-gray-400">Target Line</span>
                                 </div>
-                                <div class="relative w-full h-64">
+                                <div class="relative w-full h-56 sm:h-64">
                                     <canvas id="weightChart"></canvas>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Daily Log History Table -->
-                        <div class="bg-white p-5 rounded-3xl shadow-sm border border-amber-50">
-                            <h3 class="text-base font-bold text-cozy-darkText mb-4">Past Log History</h3>
+                        <!-- History Table -->
+                        <div class="bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-amber-50">
+                            <h3 class="text-sm sm:text-base font-bold text-cozy-darkText mb-3">Log History</h3>
                             <div class="overflow-x-auto custom-scrollbar">
-                                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                                <table class="w-full text-left border-collapse text-xs">
                                     <thead>
                                         <tr class="bg-cozy-cream/60 text-gray-600 border-b border-amber-100">
-                                            <th class="p-3 rounded-l-xl">Date & Time</th>
-                                            <th class="p-3">Weight</th>
-                                            <th class="p-3">Food Intake</th>
-                                            <th class="p-3">Litter Box</th>
-                                            <th class="p-3">Demeanor</th>
-                                            <th class="p-3">Notes</th>
-                                            <th class="p-3 rounded-r-xl text-right">Actions</th>
+                                            <th class="p-2.5 rounded-l-xl">Date</th>
+                                            <th class="p-2.5">Weight</th>
+                                            <th class="p-2.5">Food</th>
+                                            <th class="p-2.5">Litter</th>
+                                            <th class="p-2.5">Demeanor</th>
+                                            <th class="p-2.5">Notes</th>
+                                            <th class="p-2.5 rounded-r-xl text-right">Delete</th>
                                         </tr>
                                     </thead>
                                     <tbody id="logHistoryTable" class="divide-y divide-gray-100">
-                                        <!-- Rows inserted via JS -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB 2: Care & Medication Schedule -->
-                    <div id="pane-schedule" class="tab-pane hidden space-y-6">
-                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-amber-50">
-                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+                    <!-- TAB 2: Care Schedule -->
+                    <div id="pane-schedule" class="tab-pane hidden space-y-4">
+                        <div class="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-amber-50">
+                            <div class="flex justify-between items-center gap-2 mb-4">
                                 <div>
-                                    <h3 class="text-lg font-bold text-cozy-darkText">Daily Care & Medication Checklist</h3>
-                                    <p class="text-xs text-gray-500">Track feeding rounds, medications, and routine care</p>
+                                    <h3 class="text-base sm:text-lg font-bold text-cozy-darkText">Care & Medication Routines</h3>
+                                    <p class="text-xs text-gray-500">Feeding, medication, or wellness schedules</p>
                                 </div>
-                                <button onclick="openAddTaskModal()" class="bg-cozy-sage text-white text-xs px-3.5 py-2 rounded-xl font-medium hover:bg-teal-700 transition">
-                                    <i class="fa-solid fa-plus mr-1"></i> Add Care Routine
+                                <button onclick="openAddTaskModal()" class="bg-cozy-sage text-white text-xs px-3 py-2 rounded-xl font-medium hover:bg-cozy-sageDark transition flex-shrink-0">
+                                    <i class="fa-solid fa-plus mr-1"></i> Add Task
                                 </button>
                             </div>
 
-                            <div id="scheduleTaskList" class="space-y-3">
-                                <!-- Tasks generated via JS -->
+                            <div id="scheduleTaskList" class="space-y-2.5">
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB 3: Milestone Checklist -->
-                    <div id="pane-milestones" class="tab-pane hidden space-y-6">
-                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-amber-50">
-                            <div class="flex justify-between items-center mb-6">
+                    <!-- TAB 3: Kitten Milestones -->
+                    <div id="pane-milestones" class="tab-pane hidden space-y-4">
+                        <div class="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-amber-50">
+                            <div id="milestonesKittenHeader" class="flex justify-between items-center mb-4">
                                 <div>
-                                    <h3 class="text-lg font-bold text-cozy-darkText">Developmental & Behavioral Milestones</h3>
-                                    <p class="text-xs text-gray-500">Celebrate each milestone along your foster's growth journey!</p>
+                                    <h3 class="text-base sm:text-lg font-bold text-cozy-darkText">Kitten Developmental Milestones</h3>
+                                    <p class="text-xs text-gray-500">Track key growth and behavior milestones!</p>
                                 </div>
-                                <span id="milestoneProgressText" class="text-xs font-bold text-cozy-sage bg-teal-50 px-3 py-1 rounded-full">0/0 Completed</span>
+                                <span id="milestoneProgressText" class="text-xs font-bold text-cozy-sage bg-teal-50 px-3 py-1 rounded-full">0/0 Done</span>
                             </div>
 
-                            <div id="milestonesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Milestones loaded via JS -->
+                            <div id="milestonesList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            </div>
+
+                            <div id="nonKittenMilestoneNotice" class="hidden text-center py-8">
+                                <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
+                                    <i class="fa-solid fa-paw"></i>
+                                </div>
+                                <h4 class="text-sm font-bold text-gray-700">Kitten Milestones</h4>
+                                <p class="text-gray-500 text-xs max-w-xs mx-auto mt-1">Milestones are tailored for kittens. To enable, set this foster's species/type to <strong>Kitten</strong> in their profile settings.</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TAB 4: Medical History -->
-                    <div id="pane-medical" class="tab-pane hidden space-y-6">
-                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-amber-50">
-                            <h3 class="text-lg font-bold text-cozy-darkText mb-4">Medical & Vet Records</h3>
+                    <!-- TAB 4: Medical Records -->
+                    <div id="pane-medical" class="tab-pane hidden space-y-4">
+                        <div class="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-amber-50">
+                            <h3 class="text-base sm:text-lg font-bold text-cozy-darkText mb-4">Medical Records</h3>
 
                             <form id="medicalForm" onsubmit="saveMedicalNotes(event)" class="space-y-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Spay / Neuter Status</label>
-                                        <select id="medSpayStatus" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
-                                            <option value="Not Intact (Spayed/Neutered)">Spayed / Neutered</option>
+                                        <select id="medSpayStatus" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                                            <option value="Spayed/Neutered">Spayed / Neutered</option>
                                             <option value="Intact (Pending)">Intact (Pending)</option>
-                                            <option value="Scheduled">Surgery Scheduled</option>
+                                            <option value="Surgery Scheduled">Surgery Scheduled</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Microchip Number</label>
-                                        <input type="text" id="medMicrochip" placeholder="e.g. 985141002391203" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                                        <input type="text" id="medMicrochip" placeholder="e.g. 985141002391203" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Vaccinations Record</label>
-                                    <textarea id="medVaccines" rows="2" placeholder="e.g., FVRCP Dose 1: 09/10, FVRCP Dose 2: 10/01, Rabies: Pending" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Vaccinations</label>
+                                    <textarea id="medVaccines" rows="2" placeholder="e.g., FVRCP #1: 09/10, FVRCP #2: 10/01" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Deworming & Parasite Treatments</label>
-                                    <textarea id="medDeworming" rows="2" placeholder="e.g., Pyrantel 0.4ml given 09/12, Revolution applied 09/20" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Deworming / Treatments</label>
+                                    <textarea id="medDeworming" rows="2" placeholder="e.g., Pyrantel 0.4ml given 09/12" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Active / Ongoing Medications & Health Notes</label>
-                                    <textarea id="medNotes" rows="3" placeholder="e.g., Eye drops twice daily for upper respiratory infection until Friday" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Medical Notes & Active Prescriptions</label>
+                                    <textarea id="medNotes" rows="3" placeholder="Health details..." class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
                                 </div>
 
                                 <div class="flex justify-end">
-                                    <button type="submit" class="bg-cozy-sage hover:bg-teal-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition shadow-sm">
-                                        Update Medical Info
+                                    <button type="submit" class="bg-cozy-sage hover:bg-cozy-sageDark text-white font-medium px-5 py-2 rounded-xl text-xs sm:text-sm transition shadow-sm">
+                                        Save Medical Info
                                     </button>
                                 </div>
                             </form>
@@ -397,111 +439,164 @@
         </div>
     </main>
 
-    <!-- MODAL: Add / Edit Pet -->
-    <div id="petModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-amber-100 z-30 px-4 py-2 safe-area-pb shadow-lg flex justify-around items-center">
+        <button onclick="toggleMobileRosterView()" id="mobileNavRoster" class="flex flex-col items-center text-cozy-sage font-semibold text-[10px]">
+            <i class="fa-solid fa-list-ul text-lg"></i>
+            <span>Roster</span>
+        </button>
+        <button onclick="openPetModal()" class="flex flex-col items-center text-gray-500 font-medium text-[10px] hover:text-cozy-sage">
+            <div class="bg-cozy-sage text-white p-2 rounded-full -mt-5 border-2 border-white shadow-md">
+                <i class="fa-solid fa-plus text-base"></i>
+            </div>
+            <span class="mt-0.5">Add Foster</span>
+        </button>
+        <button onclick="toggleMobileDetailView()" id="mobileNavDetails" class="flex flex-col items-center text-gray-500 font-medium text-[10px]">
+            <i class="fa-solid fa-notes-medical text-lg"></i>
+            <span>Active Profile</span>
+        </button>
+    </div>
+
+    <!-- MODAL: Add / Edit Foster Pet -->
+    <div id="petModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button onclick="closePetModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
-            <h3 id="petModalTitle" class="text-xl font-bold text-cozy-darkText mb-4">Add New Foster Pet</h3>
+            <h3 id="petModalTitle" class="text-lg sm:text-xl font-bold text-cozy-darkText mb-4">Add New Foster Pet</h3>
 
-            <form id="petForm" onsubmit="handlePetFormSubmit(event)" class="space-y-4">
+            <form id="petForm" onsubmit="handlePetFormSubmit(event)" class="space-y-3.5">
                 <input type="hidden" id="petFormId">
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Pet Name *</label>
-                    <input type="text" id="petName" required placeholder="e.g. Barnaby" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                    <input type="text" id="petName" required placeholder="e.g. Barnaby" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-2.5">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Species / Breed</label>
-                        <input type="text" id="petBreed" placeholder="e.g. Kitten / Tabby" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Species / Type *</label>
+                        <select id="petSpecies" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                            <option value="Kitten">Kitten</option>
+                            <option value="Cat">Adult Cat</option>
+                            <option value="Puppy">Puppy</option>
+                            <option value="Dog">Adult Dog</option>
+                            <option value="Other">Other Small Animal</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Estimated Age</label>
-                        <input type="text" id="petAge" placeholder="e.g. 3 Weeks" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <input type="text" id="petAge" placeholder="e.g. 4 Weeks" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-2.5">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Intake Date *</label>
-                        <input type="date" id="petIntake" required class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <input type="date" id="petIntake" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Target Weight (g/lbs)</label>
-                        <input type="text" id="petTargetWeight" placeholder="e.g. 900g or 2lbs" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Target Weight</label>
+                        <input type="text" id="petTargetWeight" placeholder="e.g. 900 or 2lbs" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Foster Status</label>
-                    <select id="petStatus" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
-                        <option value="Active Foster">Active Foster</option>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Foster Status *</label>
+                    <select id="petStatus" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                         <option value="Incoming">Incoming</option>
-                        <option value="Ready for Adoption">Ready for Adoption</option>
-                        <option value="Adopted">Adopted</option>
+                        <option value="Current">Current</option>
+                        <option value="Former">Former (Adopted/Transferred/Finished)</option>
                     </select>
                 </div>
 
+                <!-- Link Siblings / Littermates Field -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Image URL / Preset Avatar</label>
-                    <input type="text" id="petImage" placeholder="https://... or leave blank for default avatar" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Link Siblings / Littermates / Bonded Pairs</label>
+                    <div id="siblingsSelectionBox" class="bg-gray-50 border border-gray-200 rounded-xl p-2.5 max-h-32 overflow-y-auto space-y-1.5 custom-scrollbar text-xs">
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">Select other fosters in your roster to link as littermates or bonded pairs.</p>
+                </div>
+
+                <!-- Camera Roll Photo Upload Input -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Upload Photo (from Camera Roll)</label>
+                    <input type="file" id="petImageFileInput" accept="image/*" onchange="previewSelectedImage(event)" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cozy-cream file:text-cozy-darkText hover:file:bg-amber-100 cursor-pointer">
+
+                    <div id="photoPreviewContainer" class="mt-2.5 hidden flex items-center space-x-3">
+                        <img id="photoPreviewImg" src="" class="w-14 h-14 rounded-xl object-cover border border-cozy-sage">
+                        <span class="text-xs text-gray-500">Photo attached!</span>
+                    </div>
                 </div>
 
                 <div class="pt-2 flex justify-end space-x-2">
-                    <button type="button" onclick="closePetModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium">Cancel</button>
-                    <button type="submit" class="px-5 py-2 bg-cozy-sage hover:bg-teal-700 text-white rounded-xl text-sm font-medium shadow-sm">Save Profile</button>
+                    <button type="button" onclick="closePetModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-medium">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-cozy-sage hover:bg-cozy-sageDark text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm">Save Foster</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: Add Routine Task -->
-    <div id="taskModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl relative">
+    <!-- MODAL: Add Care Routine -->
+    <div id="taskModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-xl relative">
             <button onclick="closeTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
-            <h3 class="text-xl font-bold text-cozy-darkText mb-4">Add Routine Care Item</h3>
+            <h3 class="text-lg sm:text-xl font-bold text-cozy-darkText mb-4">Add Routine Care Item</h3>
 
-            <form id="taskForm" onsubmit="handleTaskFormSubmit(event)" class="space-y-4">
+            <form id="taskForm" onsubmit="handleTaskFormSubmit(event)" class="space-y-3.5">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Task Description *</label>
-                    <input type="text" id="taskTitle" required placeholder="e.g. Give Eye Drops / Bottle Feeding" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                    <input type="text" id="taskTitle" required placeholder="e.g. Eye Drops / Bottle Feeding" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Scheduled Time / Frequency</label>
-                    <input type="text" id="taskTime" placeholder="e.g. 8:00 AM & 8:00 PM" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                    <input type="text" id="taskTime" placeholder="e.g. 8:00 AM & 8:00 PM" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
                 </div>
                 <div class="pt-2 flex justify-end space-x-2">
-                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium">Cancel</button>
-                    <button type="submit" class="px-5 py-2 bg-cozy-sage text-white rounded-xl text-sm font-medium">Add Routine</button>
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs sm:text-sm font-medium">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-cozy-sage text-white rounded-xl text-xs sm:text-sm font-medium">Add Routine</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Notification Toast Box -->
-    <div id="toastBox" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-cozy-darkText text-white px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-3 text-sm">
+    <!-- Toast Notification -->
+    <div id="toastBox" class="fixed bottom-16 lg:bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-cozy-darkText text-white px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-3 text-xs sm:text-sm">
         <i id="toastIcon" class="fa-solid fa-circle-check text-cozy-sage"></i>
         <span id="toastMsg">Action saved successfully!</span>
     </div>
 
     <script>
-        // State Store
+        // --- FIREBASE CONFIGURATION & INITIALIZATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqPjoCg0gYKmxBkF3-7eqYilmLdJqvGU8",
+            authDomain: "house-motives.firebaseapp.com",
+            databaseURL: "https://house-motives-default-rtdb.firebaseio.com",
+            projectId: "house-motives",
+            storageBucket: "house-motives.firebasestorage.app",
+            messagingSenderId: "338470965043",
+            appId: "1:338470965043:web:a68b80174ba494d4ce3846"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
         let state = {
+            user: null,
             pets: [],
             activePetId: null,
             filterStatus: 'all',
-            activeTab: 'dailyLog'
+            activeTab: 'dailyLog',
+            tempBase64Image: '',
+            mobileView: 'roster' // 'roster' or 'detail'
         };
 
         let weightChartInstance = null;
 
-        // Default milestones template
-        const DEFAULT_MILESTONES = [
+        const KITTEN_MILESTONES = [
             { id: 'm1', title: 'Eyes Completely Opened', category: 'Physical', done: false, dateDone: '' },
             { id: 'm2', title: 'Ears Unfolded & Hearing', category: 'Physical', done: false, dateDone: '' },
             { id: 'm3', title: 'First Steps / Wobbly Walking', category: 'Motor', done: false, dateDone: '' },
@@ -509,75 +604,153 @@
             { id: 'm5', title: 'Litter Box Trained', category: 'Behavior', done: false, dateDone: '' },
             { id: 'm6', title: 'Self-Grooming Observed', category: 'Behavior', done: false, dateDone: '' },
             { id: 'm7', title: 'First Bath Completed', category: 'Care', done: false, dateDone: '' },
-            { id: 'm8', title: 'Socialized with Humans / Purring', category: 'Behavior', done: false, dateDone: '' },
-            { id: 'm9', title: 'Reached Target Adoption Weight', category: 'Milestone', done: false, dateDone: '' }
+            { id: 'm8', title: 'Socialized / Purring', category: 'Behavior', done: false, dateDone: '' },
+            { id: 'm9', title: 'Reached Target Adoption Weight (2 lbs)', category: 'Milestone', done: false, dateDone: '' }
         ];
 
-        // Seed Initial Mock Data if local storage empty
+        // Default seed data for initial view or offline fallback
         const SEED_PETS = [
             {
-                id: 'foster-1',
+                id: 'foster-mochi',
                 name: 'Mochi',
-                breed: 'Kitten - Domestic Shorthair',
+                species: 'Kitten',
                 age: '4 Weeks',
                 intakeDate: '2026-09-10',
                 targetWeight: '900',
-                status: 'Active Foster',
-                image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=300&q=80',
+                status: 'Current',
+                image: '',
+                siblings: ['foster-matcha'],
                 logs: [
                     { id: 'l1', dateTime: '2026-09-27T08:00', weight: 380, unit: 'g', food: '15ml KMR', bowel: 'Normal', demeanor: 'Playful & Active', notes: 'Very vocal for breakfast' },
-                    { id: 'l2', dateTime: '2026-09-28T08:00', weight: 410, unit: 'g', food: '18ml KMR + Wet Gruel', bowel: 'Normal', demeanor: 'Playful & Active', notes: 'Licking gruel off dish!' },
-                    { id: 'l3', dateTime: '2026-09-29T08:00', weight: 435, unit: 'g', food: '20ml Gruel', bowel: 'Normal', demeanor: 'Calm & Content', notes: 'Gained steadily' }
+                    { id: 'l2', dateTime: '2026-09-28T08:00', weight: 410, unit: 'g', food: '18ml KMR + Wet Gruel', bowel: 'Normal', demeanor: 'Playful & Active', notes: 'Licking gruel off dish!' }
                 ],
                 tasks: [
                     { id: 't1', title: 'Morning Feeding & Weigh-in', time: '8:00 AM', done: true },
-                    { id: 't2', title: 'Eye Drops (URI)', time: '12:00 PM', done: false },
-                    { id: 't3', title: 'Evening Feeding & Bath Check', time: '8:00 PM', done: false }
+                    { id: 't2', title: 'Eye Drops', time: '12:00 PM', done: false }
                 ],
-                milestones: JSON.parse(JSON.stringify(DEFAULT_MILESTONES)).map((m, idx) => {
-                    if (idx < 3) { m.done = true; m.dateDone = '2026-09-15'; }
-                    return m;
-                }),
-                medical: {
-                    spayStatus: 'Intact (Pending)',
-                    microchip: '985141002998112',
-                    vaccines: 'FVRCP #1 given on 09/20.',
-                    deworming: 'Pyrantel 0.4ml given 09/12.',
-                    notes: 'Mild eye discharge clearing up with terramycin drops.'
-                }
+                milestones: JSON.parse(JSON.stringify(KITTEN_MILESTONES)),
+                medical: { spayStatus: 'Intact (Pending)', microchip: '985141002998112', vaccines: 'FVRCP #1 given on 09/20.', deworming: 'Pyrantel 0.4ml given 09/12.', notes: 'Mild eye discharge clearing up.' }
+            },
+            {
+                id: 'foster-matcha',
+                name: 'Matcha',
+                species: 'Kitten',
+                age: '4 Weeks',
+                intakeDate: '2026-09-10',
+                targetWeight: '900',
+                status: 'Current',
+                image: '',
+                siblings: ['foster-mochi'],
+                logs: [
+                    { id: 'l10', dateTime: '2026-09-28T08:00', weight: 395, unit: 'g', food: '18ml KMR', bowel: 'Normal', demeanor: 'Calm & Content', notes: 'Gained steadily' }
+                ],
+                tasks: [],
+                milestones: JSON.parse(JSON.stringify(KITTEN_MILESTONES)),
+                medical: { spayStatus: 'Intact (Pending)', microchip: '', vaccines: '', deworming: '', notes: '' }
             }
         ];
 
+        // Window Load Lifecycle
         window.onload = function() {
-            loadStorage();
-            if (state.pets.length > 0 && !state.activePetId) {
-                state.activePetId = state.pets[0].id;
-            }
-            // Set default datetime picker to now
+            // Set Default DateTime Picker
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('logDateTime').value = now.toISOString().slice(0,16);
 
-            renderRoster();
-            renderActivePetDetail();
+            // Listen for Auth State Changes
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    state.user = user;
+                    updateUserUI(true);
+                    attachFirebaseListeners();
+                } else {
+                    state.user = null;
+                    updateUserUI(false);
+                    // Fallback to local storage or seed data when unauthenticated
+                    loadLocalStorage();
+                }
+            });
         };
 
-        function loadStorage() {
-            const data = localStorage.getItem('foster_care_data');
-            if (data) {
-                try {
-                    state.pets = JSON.parse(data);
-                } catch(e) {
-                    state.pets = SEED_PETS;
-                }
+        // --- FIREBASE AUTHENTICATION & LISTENERS ---
+        function handleGoogleSignIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then(result => {
+                showToast(`Welcome back, ${result.user.displayName}!`);
+            }).catch(error => {
+                console.error("Auth error:", error);
+                showToast("Sign in failed: " + error.message);
+            });
+        }
+
+        function handleSignOut() {
+            auth.signOut().then(() => {
+                showToast("Signed out.");
+            });
+        }
+
+        function updateUserUI(isLoggedIn) {
+            const authOverlay = document.getElementById('authOverlayScreen');
+            const signInBtn = document.getElementById('googleSignInBtn');
+            const userPill = document.getElementById('userInfoPill');
+            const syncBadge = document.getElementById('syncStatusBadge');
+
+            if (isLoggedIn && state.user) {
+                authOverlay.classList.add('hidden');
+                signInBtn.classList.add('hidden');
+                userPill.classList.remove('hidden');
+                document.getElementById('userName').innerText = state.user.displayName || state.user.email;
+                document.getElementById('userAvatar').src = state.user.photoURL || `https://placehold.co/100x100/84A59D/ffffff?text=U`;
+                syncBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> RTDB Synced`;
             } else {
-                state.pets = SEED_PETS;
-                saveStorage();
+                authOverlay.classList.remove('hidden');
+                signInBtn.classList.remove('hidden');
+                userPill.classList.add('hidden');
+                syncBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Local Cache`;
             }
         }
 
-        function saveStorage() {
-            localStorage.setItem('foster_care_data', JSON.stringify(state.pets));
+        function attachFirebaseListeners() {
+            if (!state.user) return;
+            // Listening on /fosters path in Realtime Database
+            const fostersRef = db.ref(`fosters/${state.user.uid}`);
+            fostersRef.on('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    state.pets = Array.isArray(data) ? data : Object.values(data);
+                } else {
+                    // Seed initial data to RTDB if empty
+                    state.pets = SEED_PETS;
+                    saveToDatabase();
+                }
+
+                if (state.pets.length > 0 && !state.pets.find(p => p.id === state.activePetId)) {
+                    state.activePetId = state.pets[0].id;
+                }
+
+                renderRoster();
+                renderActivePetDetail();
+            });
+        }
+
+        function saveToDatabase() {
+            if (state.user) {
+                db.ref(`fosters/${state.user.uid}`).set(state.pets);
+            } else {
+                localStorage.setItem('fostery_local_cache', JSON.stringify(state.pets));
+            }
+        }
+
+        function loadLocalStorage() {
+            const cache = localStorage.getItem('fostery_local_cache');
+            if (cache) {
+                try { state.pets = JSON.parse(cache); } catch(e) { state.pets = SEED_PETS; }
+            } else {
+                state.pets = SEED_PETS;
+            }
+            if (state.pets.length > 0) state.activePetId = state.pets[0].id;
+            renderRoster();
+            renderActivePetDetail();
         }
 
         function showToast(msg) {
@@ -589,21 +762,20 @@
             }, 3000);
         }
 
-        // Filter Logic
         function filterStatus(status) {
             state.filterStatus = status;
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.className = "filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200";
+                btn.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap";
             });
             const activeMap = {
                 'all': 'filter-all',
-                'Active Foster': 'filter-active',
-                'Ready for Adoption': 'filter-ready',
-                'Adopted': 'filter-adopted'
+                'Incoming': 'filter-incoming',
+                'Current': 'filter-current',
+                'Former': 'filter-former'
             };
-            if(activeMap[status]) {
+            if (activeMap[status]) {
                 const el = document.getElementById(activeMap[status]);
-                if(el) el.className = "filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-cozy-sage text-white";
+                if (el) el.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap";
             }
             renderRoster();
         }
@@ -619,14 +791,13 @@
                 filtered = state.pets.filter(p => p.status === state.filterStatus);
             }
 
-            // Update Counts
             document.getElementById('count-all').innerText = state.pets.length;
-            document.getElementById('count-active').innerText = state.pets.filter(p => p.status === 'Active Foster').length;
-            document.getElementById('count-ready').innerText = state.pets.filter(p => p.status === 'Ready for Adoption').length;
-            document.getElementById('count-adopted').innerText = state.pets.filter(p => p.status === 'Adopted').length;
+            document.getElementById('count-incoming').innerText = state.pets.filter(p => p.status === 'Incoming').length;
+            document.getElementById('count-current').innerText = state.pets.filter(p => p.status === 'Current').length;
+            document.getElementById('count-former').innerText = state.pets.filter(p => p.status === 'Former').length;
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-gray-400 bg-white rounded-2xl text-sm">No pets found in this view.</div>`;
+                container.innerHTML = `<div class="p-6 text-center text-gray-400 bg-white rounded-2xl text-xs sm:text-sm">No fosters in this status.</div>`;
             }
 
             state.pets.forEach(pet => {
@@ -643,26 +814,30 @@
                 const weightDisplay = latestLog ? `${latestLog.weight}${latestLog.unit}` : 'No logs';
 
                 const card = document.createElement('div');
-                card.onclick = () => selectActivePet(pet.id);
-                card.className = `p-3.5 rounded-2xl cursor-pointer transition flex items-center justify-between ${
+                card.onclick = () => {
+                    selectActivePet(pet.id);
+                    if (window.innerWidth < 1024) toggleMobileDetailView();
+                };
+                card.className = `p-3 rounded-2xl cursor-pointer transition flex items-center justify-between ${
                     isSelected ? 'bg-cozy-cream border-2 border-cozy-sage shadow-sm' : 'bg-white hover:bg-amber-50/50 border border-amber-50'
                 }`;
 
+                const avatarSrc = pet.image || `https://placehold.co/100x100/84A59D/ffffff?text=${pet.name.charAt(0)}`;
+
                 card.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <img src="${pet.image || 'https://placehold.co/100x100/84A59D/ffffff?text=' + pet.name.charAt(0)}"
-                             alt="${pet.name}" class="w-12 h-12 rounded-xl object-cover border border-amber-100">
-                        <div>
-                            <h4 class="font-bold text-cozy-darkText text-sm">${pet.name}</h4>
-                            <p class="text-xs text-gray-500">${pet.breed || 'Pet'}</p>
-                            <span class="inline-block text-[10px] px-2 py-0.5 mt-1 rounded-full ${getStatusBadgeClass(pet.status)}">
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <img src="${avatarSrc}" alt="${pet.name}" class="w-11 h-11 rounded-xl object-cover border border-amber-100 bg-gray-50 flex-shrink-0">
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-cozy-darkText text-xs sm:text-sm truncate">${pet.name}</h4>
+                            <p class="text-[11px] text-gray-500 truncate">${pet.species || 'Foster'}</p>
+                            <span class="inline-block text-[10px] px-2 py-0.5 mt-0.5 rounded-full ${getStatusBadgeClass(pet.status)}">
                                 ${pet.status}
                             </span>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <span class="text-xs text-gray-400 block">Latest Weight</span>
-                        <span class="text-sm font-bold text-cozy-sage">${weightDisplay}</span>
+                    <div class="text-right flex-shrink-0 ml-2">
+                        <span class="text-[10px] text-gray-400 block">Weight</span>
+                        <span class="text-xs sm:text-sm font-bold text-cozy-sage">${weightDisplay}</span>
                     </div>
                 `;
                 container.appendChild(card);
@@ -671,9 +846,9 @@
 
         function getStatusBadgeClass(status) {
             switch(status) {
-                case 'Active Foster': return 'bg-emerald-100 text-emerald-800';
-                case 'Ready for Adoption': return 'bg-amber-100 text-amber-800';
-                case 'Adopted': return 'bg-indigo-100 text-indigo-800';
+                case 'Current': return 'bg-emerald-100 text-emerald-800';
+                case 'Incoming': return 'bg-amber-100 text-amber-800';
+                case 'Former': return 'bg-indigo-100 text-indigo-800';
                 default: return 'bg-gray-100 text-gray-700';
             }
         }
@@ -682,6 +857,22 @@
             state.activePetId = id;
             renderRoster();
             renderActivePetDetail();
+        }
+
+        function toggleMobileRosterView() {
+            state.mobileView = 'roster';
+            document.getElementById('rosterSidebar').classList.remove('hidden');
+            document.getElementById('detailWorkspace').classList.add('hidden');
+            document.getElementById('mobileNavRoster').className = "flex flex-col items-center text-cozy-sage font-semibold text-[10px]";
+            document.getElementById('mobileNavDetails').className = "flex flex-col items-center text-gray-500 font-medium text-[10px]";
+        }
+
+        function toggleMobileDetailView() {
+            state.mobileView = 'detail';
+            document.getElementById('rosterSidebar').classList.add('hidden');
+            document.getElementById('detailWorkspace').classList.remove('hidden');
+            document.getElementById('mobileNavRoster').className = "flex flex-col items-center text-gray-500 font-medium text-[10px]";
+            document.getElementById('mobileNavDetails').className = "flex flex-col items-center text-cozy-sage font-semibold text-[10px]";
         }
 
         function renderActivePetDetail() {
@@ -698,31 +889,56 @@
             detailView.classList.remove('hidden');
             noPetView.classList.add('hidden');
 
-            // Header elements
             document.getElementById('detailName').innerText = pet.name;
             document.getElementById('detailImg').src = pet.image || `https://placehold.co/150x150/84A59D/ffffff?text=${pet.name.charAt(0)}`;
-            document.getElementById('detailBreedAge').innerText = `${pet.breed || 'Foster Pet'} • ${pet.age || 'Age N/A'}`;
+            document.getElementById('detailBreedAge').innerText = `${pet.species || 'Foster'} • ${pet.age || 'Age N/A'}`;
             document.getElementById('detailIntake').innerText = pet.intakeDate || 'N/A';
             document.getElementById('detailTarget').innerText = pet.targetWeight ? `${pet.targetWeight}` : 'Not set';
             document.getElementById('detailMicrochip').innerText = pet.medical?.microchip || 'N/A';
 
             const badge = document.getElementById('detailStatusBadge');
             badge.innerText = pet.status;
-            badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(pet.status)}`;
+            badge.className = `px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getStatusBadgeClass(pet.status)}`;
 
-            // Render current active tab content
+            // Render Linked Siblings Badges
+            renderSiblingsBadges(pet);
+
             renderTabContent();
+        }
+
+        function renderSiblingsBadges(pet) {
+            const container = document.getElementById('siblingsBadgeContainer');
+            container.innerHTML = '';
+
+            const siblingIds = pet.siblings || [];
+            if (siblingIds.length === 0) return;
+
+            const label = document.createElement('span');
+            label.className = "text-[10px] font-semibold text-gray-400 uppercase mr-1";
+            label.innerText = "Littermates:";
+            container.appendChild(label);
+
+            siblingIds.forEach(sId => {
+                const siblingPet = state.pets.find(p => p.id === sId);
+                if (siblingPet) {
+                    const btn = document.createElement('button');
+                    btn.onclick = () => selectActivePet(siblingPet.id);
+                    btn.className = "inline-flex items-center space-x-1 px-2 py-0.5 bg-amber-100/70 hover:bg-amber-200 text-amber-900 rounded-lg text-[11px] font-medium transition";
+                    btn.innerHTML = `<i class="fa-solid fa-users text-[9px] text-cozy-coral"></i> <span>${siblingPet.name}</span>`;
+                    container.appendChild(btn);
+                }
+            });
         }
 
         function switchTab(tabName) {
             state.activeTab = tabName;
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('[id^="tab-"]').forEach(btn => {
-                btn.className = "pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2";
+                btn.className = "pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap";
             });
 
             document.getElementById(`pane-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}`).className = "pb-3 tab-active transition flex items-center gap-2";
+            document.getElementById(`tab-${tabName}`).className = "pb-2.5 tab-active transition flex items-center gap-1.5 whitespace-nowrap";
 
             renderTabContent();
         }
@@ -749,20 +965,20 @@
             const logs = pet.logs || [];
 
             if (logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">No daily logs recorded yet. Add your first weight entry above!</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-3 text-center text-gray-400">No daily logs added yet.</td></tr>`;
             } else {
                 [...logs].reverse().forEach(log => {
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-amber-50/40 transition";
                     const formattedDate = new Date(log.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
                     tr.innerHTML = `
-                        <td class="p-3 font-medium text-gray-700">${formattedDate}</td>
-                        <td class="p-3 font-bold text-cozy-sage">${log.weight} ${log.unit}</td>
-                        <td class="p-3 text-gray-600">${log.food || '-'}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-xs">${log.bowel || 'Normal'}</span></td>
-                        <td class="p-3 text-gray-600">${log.demeanor || '-'}</td>
-                        <td class="p-3 text-gray-500 max-w-xs truncate">${log.notes || '-'}</td>
-                        <td class="p-3 text-right">
+                        <td class="p-2.5 font-medium text-gray-700 whitespace-nowrap">${formattedDate}</td>
+                        <td class="p-2.5 font-bold text-cozy-sage whitespace-nowrap">${log.weight} ${log.unit}</td>
+                        <td class="p-2.5 text-gray-600">${log.food || '-'}</td>
+                        <td class="p-2.5"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-[10px]">${log.bowel || 'Normal'}</span></td>
+                        <td class="p-2.5 text-gray-600">${log.demeanor || '-'}</td>
+                        <td class="p-2.5 text-gray-500 max-w-xs truncate">${log.notes || '-'}</td>
+                        <td class="p-2.5 text-right">
                             <button onclick="deleteDailyLog('${log.id}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash-can"></i></button>
                         </td>
                     `;
@@ -798,8 +1014,8 @@
                             backgroundColor: 'rgba(132, 165, 157, 0.15)',
                             fill: true,
                             tension: 0.3,
-                            borderWidth: 3,
-                            pointRadius: 5,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
                             pointBackgroundColor: '#84A59D'
                         },
                         ...(targetVal ? [{
@@ -817,17 +1033,12 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: true, position: 'top' },
+                        legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
                         tooltip: { mode: 'index', intersect: false }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: false,
-                            grid: { color: 'rgba(0,0,0,0.05)' }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
@@ -852,10 +1063,9 @@
             };
 
             pet.logs.push(newLog);
-            saveStorage();
-            showToast("Daily log added!");
+            saveToDatabase();
+            showToast("Daily log recorded!");
 
-            // Reset notes & food
             document.getElementById('logFood').value = '';
             document.getElementById('logNotes').value = '';
 
@@ -868,7 +1078,7 @@
             if (!pet) return;
 
             pet.logs = pet.logs.filter(l => l.id !== logId);
-            saveStorage();
+            saveToDatabase();
             showToast("Log entry deleted.");
             renderRoster();
             renderActivePetDetail();
@@ -881,23 +1091,23 @@
             const tasks = pet.tasks || [];
 
             if (tasks.length === 0) {
-                container.innerHTML = `<p class="text-gray-400 text-sm text-center py-6">No care tasks added yet. Click above to add feeding or med routines!</p>`;
+                container.innerHTML = `<p class="text-gray-400 text-xs sm:text-sm text-center py-6">No care routines set. Click above to add a task!</p>`;
                 return;
             }
 
             tasks.forEach(task => {
                 const item = document.createElement('div');
-                item.className = `flex items-center justify-between p-3.5 rounded-2xl border transition ${
+                item.className = `flex items-center justify-between p-3 rounded-2xl border transition ${
                     task.done ? 'bg-gray-50 border-gray-200 opacity-75' : 'bg-cozy-cream/40 border-amber-100'
                 }`;
 
                 item.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTaskDone('${task.id}')"
-                               class="w-5 h-5 text-cozy-sage rounded-lg focus:ring-cozy-sage border-gray-300 cursor-pointer">
+                               class="w-4 h-4 text-cozy-sage rounded-md focus:ring-cozy-sage border-gray-300 cursor-pointer">
                         <div>
-                            <span class="text-sm font-semibold text-cozy-darkText ${task.done ? 'line-through text-gray-400' : ''}">${task.title}</span>
-                            <span class="text-xs text-gray-500 block"><i class="fa-regular fa-clock mr-1"></i>${task.time || 'Anytime'}</span>
+                            <span class="text-xs sm:text-sm font-semibold text-cozy-darkText ${task.done ? 'line-through text-gray-400' : ''}">${task.title}</span>
+                            <span class="text-[10px] sm:text-xs text-gray-500 block"><i class="fa-regular fa-clock mr-1"></i>${task.time || 'Anytime'}</span>
                         </div>
                     </div>
                     <button onclick="deleteTask('${task.id}')" class="text-gray-400 hover:text-red-500 p-1">
@@ -914,7 +1124,7 @@
             const t = pet.tasks.find(item => item.id === taskId);
             if (t) {
                 t.done = !t.done;
-                saveStorage();
+                saveToDatabase();
                 renderSchedule(pet);
             }
         }
@@ -923,9 +1133,9 @@
             const pet = state.pets.find(p => p.id === state.activePetId);
             if (!pet) return;
             pet.tasks = pet.tasks.filter(t => t.id !== taskId);
-            saveStorage();
+            saveToDatabase();
             renderSchedule(pet);
-            showToast("Routine deleted.");
+            showToast("Routine task removed.");
         }
 
         function openAddTaskModal() {
@@ -951,7 +1161,7 @@
                 done: false
             });
 
-            saveStorage();
+            saveToDatabase();
             closeTaskModal();
             renderSchedule(pet);
             showToast("New care task added!");
@@ -959,33 +1169,47 @@
 
         function renderMilestones(pet) {
             const container = document.getElementById('milestonesList');
+            const header = document.getElementById('milestonesKittenHeader');
+            const notice = document.getElementById('nonKittenMilestoneNotice');
+
             container.innerHTML = '';
+
+            const isKitten = pet.species === 'Kitten';
+
+            if (!isKitten) {
+                header.classList.add('hidden');
+                notice.classList.remove('hidden');
+                return;
+            }
+
+            header.classList.remove('hidden');
+            notice.classList.add('hidden');
 
             let milestones = pet.milestones;
             if (!milestones || milestones.length === 0) {
-                pet.milestones = JSON.parse(JSON.stringify(DEFAULT_MILESTONES));
+                pet.milestones = JSON.parse(JSON.stringify(KITTEN_MILESTONES));
                 milestones = pet.milestones;
-                saveStorage();
+                saveToDatabase();
             }
 
             const completedCount = milestones.filter(m => m.done).length;
-            document.getElementById('milestoneProgressText').innerText = `${completedCount}/${milestones.length} Completed`;
+            document.getElementById('milestoneProgressText').innerText = `${completedCount}/${milestones.length} Done`;
 
             milestones.forEach(m => {
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-2xl border transition flex items-start space-x-3 ${
+                card.className = `p-3 rounded-2xl border transition flex items-start space-x-3 ${
                     m.done ? 'bg-teal-50/50 border-cozy-sage/40' : 'bg-white border-amber-50 hover:bg-gray-50'
                 }`;
 
                 card.innerHTML = `
                     <input type="checkbox" ${m.done ? 'checked' : ''} onchange="toggleMilestone('${m.id}')"
-                           class="mt-1 w-5 h-5 text-cozy-sage rounded-lg focus:ring-cozy-sage border-gray-300 cursor-pointer">
-                    <div class="flex-1">
+                           class="mt-0.5 w-4 h-4 text-cozy-sage rounded-md focus:ring-cozy-sage border-gray-300 cursor-pointer">
+                    <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${m.category}</span>
-                            ${m.dateDone ? `<span class="text-[11px] text-cozy-sage font-medium"><i class="fa-solid fa-check mr-1"></i>${m.dateDone}</span>` : ''}
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${m.category}</span>
+                            ${m.dateDone ? `<span class="text-[10px] text-cozy-sage font-medium"><i class="fa-solid fa-check mr-1"></i>${m.dateDone}</span>` : ''}
                         </div>
-                        <h4 class="text-sm font-bold text-cozy-darkText mt-1 ${m.done ? 'line-through text-gray-500' : ''}">${m.title}</h4>
+                        <h4 class="text-xs sm:text-sm font-bold text-cozy-darkText mt-1 ${m.done ? 'line-through text-gray-400' : ''}">${m.title}</h4>
                     </div>
                 `;
                 container.appendChild(card);
@@ -1000,9 +1224,9 @@
             if (m) {
                 m.done = !m.done;
                 m.dateDone = m.done ? new Date().toISOString().split('T')[0] : '';
-                saveStorage();
+                saveToDatabase();
                 renderMilestones(pet);
-                showToast(m.done ? "Milestone celebrated! 🎉" : "Milestone unchecked.");
+                showToast(m.done ? "Milestone reached! 🎉" : "Milestone updated.");
             }
         }
 
@@ -1028,34 +1252,78 @@
                 notes: document.getElementById('medNotes').value
             };
 
-            saveStorage();
-            showToast("Medical records updated!");
+            saveToDatabase();
+            showToast("Medical record updated!");
             renderActivePetDetail();
         }
 
-        // Pet Modal Handler
+        function previewSelectedImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    state.tempBase64Image = e.target.result;
+                    document.getElementById('photoPreviewImg').src = e.target.result;
+                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function openPetModal(isEdit = false) {
             const modal = document.getElementById('petModal');
             const form = document.getElementById('petForm');
             form.reset();
+            state.tempBase64Image = '';
+            document.getElementById('photoPreviewContainer').classList.add('hidden');
+
+            const siblingsBox = document.getElementById('siblingsSelectionBox');
+            siblingsBox.innerHTML = '';
+
+            let currentPetId = isEdit ? state.activePetId : null;
+            let currentSiblings = [];
 
             if (isEdit) {
-                const pet = state.pets.find(p => p.id === state.activePetId);
+                const pet = state.pets.find(p => p.id === currentPetId);
                 if (!pet) return;
 
                 document.getElementById('petModalTitle').innerText = "Edit Foster Profile";
                 document.getElementById('petFormId').value = pet.id;
                 document.getElementById('petName').value = pet.name;
-                document.getElementById('petBreed').value = pet.breed || '';
+                document.getElementById('petSpecies').value = pet.species || 'Kitten';
                 document.getElementById('petAge').value = pet.age || '';
                 document.getElementById('petIntake').value = pet.intakeDate || '';
                 document.getElementById('petTargetWeight').value = pet.targetWeight || '';
-                document.getElementById('petStatus').value = pet.status || 'Active Foster';
-                document.getElementById('petImage').value = pet.image || '';
+                document.getElementById('petStatus').value = pet.status || 'Current';
+
+                currentSiblings = pet.siblings || [];
+
+                if (pet.image) {
+                    state.tempBase64Image = pet.image;
+                    document.getElementById('photoPreviewImg').src = pet.image;
+                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                }
             } else {
                 document.getElementById('petModalTitle').innerText = "Add New Foster Pet";
                 document.getElementById('petFormId').value = '';
                 document.getElementById('petIntake').value = new Date().toISOString().split('T')[0];
+            }
+
+            // Populate Sibling Picker Checkboxes
+            const eligibleSiblings = state.pets.filter(p => p.id !== currentPetId);
+            if (eligibleSiblings.length === 0) {
+                siblingsBox.innerHTML = `<p class="text-gray-400 text-[11px]">No other fosters available to link.</p>`;
+            } else {
+                eligibleSiblings.forEach(otherPet => {
+                    const isChecked = currentSiblings.includes(otherPet.id);
+                    const row = document.createElement('label');
+                    row.className = "flex items-center space-x-2 p-1 hover:bg-amber-100/50 rounded cursor-pointer";
+                    row.innerHTML = `
+                        <input type="checkbox" name="siblingPets" value="${otherPet.id}" ${isChecked ? 'checked' : ''} class="w-3.5 h-3.5 text-cozy-sage rounded border-gray-300 focus:ring-cozy-sage">
+                        <span class="text-xs text-gray-700 font-medium">${otherPet.name} (${otherPet.species})</span>
+                    `;
+                    siblingsBox.appendChild(row);
+                });
             }
 
             modal.classList.remove('hidden');
@@ -1073,74 +1341,97 @@
             e.preventDefault();
             const id = document.getElementById('petFormId').value;
 
+            // Gather selected sibling IDs
+            const siblingCheckboxes = document.querySelectorAll('input[name="siblingPets"]:checked');
+            const selectedSiblingIds = Array.from(siblingCheckboxes).map(cb => cb.value);
+
             if (id) {
                 // Edit existing
                 const pet = state.pets.find(p => p.id === id);
                 if (pet) {
                     pet.name = document.getElementById('petName').value;
-                    pet.breed = document.getElementById('petBreed').value;
+                    pet.species = document.getElementById('petSpecies').value;
                     pet.age = document.getElementById('petAge').value;
                     pet.intakeDate = document.getElementById('petIntake').value;
                     pet.targetWeight = document.getElementById('petTargetWeight').value;
                     pet.status = document.getElementById('petStatus').value;
-                    pet.image = document.getElementById('petImage').value;
+                    pet.siblings = selectedSiblingIds;
+                    if (state.tempBase64Image) {
+                        pet.image = state.tempBase64Image;
+                    }
                 }
+
+                // Two-way sibling link sync
+                syncTwoWaySiblingLinks(id, selectedSiblingIds);
+
                 showToast("Profile updated!");
             } else {
                 // Add new
                 const newId = 'foster-' + Date.now();
+                const speciesVal = document.getElementById('petSpecies').value;
                 const newPet = {
                     id: newId,
                     name: document.getElementById('petName').value,
-                    breed: document.getElementById('petBreed').value,
+                    species: speciesVal,
                     age: document.getElementById('petAge').value,
                     intakeDate: document.getElementById('petIntake').value,
                     targetWeight: document.getElementById('petTargetWeight').value,
                     status: document.getElementById('petStatus').value,
-                    image: document.getElementById('petImage').value,
+                    siblings: selectedSiblingIds,
+                    image: state.tempBase64Image || '',
                     logs: [],
                     tasks: [
                         { id: 't1', title: 'Morning Feeding & Weigh-in', time: '8:00 AM', done: false },
                         { id: 't2', title: 'Evening Feeding', time: '8:00 PM', done: false }
                     ],
-                    milestones: JSON.parse(JSON.stringify(DEFAULT_MILESTONES)),
+                    milestones: speciesVal === 'Kitten' ? JSON.parse(JSON.stringify(KITTEN_MILESTONES)) : [],
                     medical: { spayStatus: 'Intact (Pending)', microchip: '', vaccines: '', deworming: '', notes: '' }
                 };
 
                 state.pets.push(newPet);
                 state.activePetId = newId;
+
+                syncTwoWaySiblingLinks(newId, selectedSiblingIds);
                 showToast("New foster profile added!");
             }
 
-            saveStorage();
+            saveToDatabase();
             closePetModal();
             renderRoster();
             renderActivePetDetail();
+        }
+
+        function syncTwoWaySiblingLinks(petId, siblingIds) {
+            state.pets.forEach(otherPet => {
+                if (otherPet.id === petId) return;
+                if (!otherPet.siblings) otherPet.siblings = [];
+
+                if (siblingIds.includes(otherPet.id)) {
+                    if (!otherPet.siblings.includes(petId)) otherPet.siblings.push(petId);
+                } else {
+                    otherPet.siblings = otherPet.siblings.filter(s => s !== petId);
+                }
+            });
         }
 
         function deleteCurrentPet() {
             if (!state.activePetId) return;
             const pet = state.pets.find(p => p.id === state.activePetId);
 
-            if (confirm(`Are you sure you want to delete profile for "${pet.name}"?`)) {
+            if (confirm(`Are you sure you want to delete the profile for "${pet.name}"?`)) {
                 state.pets = state.pets.filter(p => p.id !== state.activePetId);
+
+                // Clean up references in other siblings
+                state.pets.forEach(p => {
+                    if (p.siblings) p.siblings = p.siblings.filter(s => s !== pet.id);
+                });
+
                 state.activePetId = state.pets.length > 0 ? state.pets[0].id : null;
-                saveStorage();
-                showToast("Foster profile removed.");
+                saveToDatabase();
+                showToast("Foster profile deleted.");
                 renderRoster();
                 renderActivePetDetail();
             }
-        }
-
-        // Export Data JSON
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.pets, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `foster_care_backup_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
         }
     </script>
 </body>
