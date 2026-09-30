@@ -12,17 +12,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
+    <!-- Chart.js (global) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Firebase SDK (Compatibility Web Version) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -84,7 +79,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <!-- App Logo & Title -->
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="showRosterView()">
+                <div class="flex items-center space-x-3 cursor-pointer" data-action="show-roster">
                     <div class="bg-cozy-sage text-white p-2 sm:p-2.5 rounded-2xl shadow-sm">
                         <i class="fa-solid fa-paw text-lg sm:text-xl"></i>
                     </div>
@@ -100,18 +95,18 @@
                     <div id="userInfoPill" class="hidden flex items-center space-x-2 bg-cozy-cream/80 px-2.5 py-1 rounded-full text-xs font-medium text-cozy-darkText border border-amber-200">
                         <img id="userAvatar" src="" class="w-6 h-6 rounded-full object-cover border border-cozy-sage" alt="User Avatar">
                         <span id="userName" class="max-w-[100px] sm:max-w-[140px] truncate">---</span>
-                        <button onclick="handleSignOut()" title="Sign Out" class="text-gray-400 hover:text-red-500 ml-1">
+                        <button data-action="sign-out" title="Sign Out" class="text-gray-400 hover:text-red-500 ml-1">
                             <i class="fa-solid fa-right-from-bracket text-xs"></i>
                         </button>
                     </div>
 
                     <!-- Sign In Button (When logged out) -->
-                    <button id="googleSignInBtn" onclick="handleGoogleSignIn()" class="hidden bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center space-x-2">
+                    <button id="googleSignInBtn" data-action="sign-in" class="hidden bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center space-x-2">
                         <i class="fa-brands fa-google text-red-500"></i>
                         <span>Google Sign In</span>
                     </button>
 
-                    <button id="addPetHeaderBtn" onclick="openPetModal()" class="bg-cozy-sage hover:bg-cozy-sageDark text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center space-x-1.5">
+                    <button id="addPetHeaderBtn" data-action="new-pet" class="bg-cozy-sage hover:bg-cozy-sageDark text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center space-x-1.5">
                         <i class="fa-solid fa-plus"></i>
                         <span class="hidden sm:inline">New Foster</span>
                         <span class="sm:hidden">Add</span>
@@ -130,7 +125,7 @@
                 <h2 class="text-2xl font-bold text-cozy-darkText">Welcome to Fostery</h2>
                 <p class="text-gray-500 text-xs sm:text-sm mt-2">Sign in with your Google Account to access your foster database synchronized across devices.</p>
             </div>
-            <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-2xl border border-gray-300 shadow-sm flex items-center justify-center space-x-3 transition">
+            <button data-action="sign-in" class="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-2xl border border-gray-300 shadow-sm flex items-center justify-center space-x-3 transition">
                 <i class="fa-brands fa-google text-red-500 text-lg"></i>
                 <span>Sign in with Google</span>
             </button>
@@ -144,10 +139,10 @@
             <div class="flex items-center justify-between">
                 <!-- Status Filter Pills -->
                 <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 custom-scrollbar w-full">
-                    <button onclick="filterStatus('all')" id="filter-all" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">All (<span id="count-all">0</span>)</button>
-                    <button onclick="filterStatus('Incoming')" id="filter-incoming" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Incoming (<span id="count-incoming">0</span>)</button>
-                    <button onclick="filterStatus('Current')" id="filter-current" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap">Current (<span id="count-current">0</span>)</button>
-                    <button onclick="filterStatus('Former')" id="filter-former" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Former (<span id="count-former">0</span>)</button>
+                    <button data-action="filter" data-filter="all" id="filter-all" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">All (<span id="count-all">0</span>)</button>
+                    <button data-action="filter" data-filter="Incoming" id="filter-incoming" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Incoming (<span id="count-incoming">0</span>)</button>
+                    <button data-action="filter" data-filter="Current" id="filter-current" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap">Current (<span id="count-current">0</span>)</button>
+                    <button data-action="filter" data-filter="Former" id="filter-former" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Former (<span id="count-former">0</span>)</button>
                 </div>
             </div>
         </div>
@@ -176,7 +171,7 @@
                     </div>
                     <h3 class="text-lg sm:text-xl font-bold text-gray-700 mb-2">No Foster Pet Selected</h3>
                     <p class="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mb-6">Select a foster pet from your roster, or create a new profile to start logging daily progress.</p>
-                    <button onclick="openPetModal()" class="bg-cozy-sage text-white px-5 py-2.5 rounded-xl font-medium shadow hover:bg-cozy-sageDark transition text-xs sm:text-sm">
+                    <button data-action="new-pet" class="bg-cozy-sage text-white px-5 py-2.5 rounded-xl font-medium shadow hover:bg-cozy-sageDark transition text-xs sm:text-sm">
                         <i class="fa-solid fa-plus mr-2"></i>Add First Foster
                     </button>
                 </div>
@@ -185,7 +180,7 @@
 
                     <!-- Sticky Back to List Button on Mobile Header -->
                     <div id="mobileBackButtonRow" class="sticky top-16 z-20 pt-1 pb-2 bg-cozy-bg/95 backdrop-blur-sm md:hidden">
-                        <button onclick="showRosterView()" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-4 py-2 bg-white hover:bg-cozy-cream border border-amber-200 text-cozy-darkText rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition">
+                        <button data-action="show-roster" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-4 py-2 bg-white hover:bg-cozy-cream border border-amber-200 text-cozy-darkText rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition">
                             <i class="fa-solid fa-arrow-left text-cozy-sage"></i>
                             <span>Back to Foster Roster</span>
                         </button>
@@ -216,10 +211,10 @@
                             </div>
 
                             <div class="flex items-center space-x-2 self-end sm:self-start">
-                                <button onclick="editCurrentPet()" class="p-2 sm:p-2.5 bg-gray-100 hover:bg-cozy-cream text-gray-700 rounded-xl text-xs sm:text-sm transition" title="Edit Profile">
+                                <button data-action="edit-pet" class="p-2 sm:p-2.5 bg-gray-100 hover:bg-cozy-cream text-gray-700 rounded-xl text-xs sm:text-sm transition" title="Edit Profile">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <button onclick="deleteCurrentPet()" class="p-2 sm:p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs sm:text-sm transition" title="Delete Profile">
+                                <button data-action="delete-pet" class="p-2 sm:p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs sm:text-sm transition" title="Delete Profile">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
@@ -227,16 +222,16 @@
 
                         <!-- Tab Header Buttons -->
                         <div class="flex border-b border-gray-200 mt-5 gap-4 sm:gap-6 text-xs sm:text-sm font-medium overflow-x-auto custom-scrollbar">
-                            <button onclick="switchTab('dailyLog')" id="tab-dailyLog" class="pb-2.5 tab-active transition flex items-center gap-1.5 whitespace-nowrap">
+                            <button data-action="switch-tab" data-tab="dailyLog" id="tab-dailyLog" class="pb-2.5 tab-active transition flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fa-solid fa-chart-line"></i> Daily Logs & Weight
                             </button>
-                            <button onclick="switchTab('schedule')" id="tab-schedule" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
+                            <button data-action="switch-tab" data-tab="schedule" id="tab-schedule" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fa-solid fa-calendar-days"></i> Care Schedule
                             </button>
-                            <button onclick="switchTab('milestones')" id="tab-milestones" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
+                            <button data-action="switch-tab" data-tab="milestones" id="tab-milestones" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fa-solid fa-award"></i> Kitten Milestones
                             </button>
-                            <button onclick="switchTab('medical')" id="tab-medical" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
+                            <button data-action="switch-tab" data-tab="medical" id="tab-medical" class="pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fa-solid fa-notes-medical"></i> Medical Notes
                             </button>
                         </div>
@@ -250,7 +245,7 @@
                                     <i class="fa-solid fa-plus-circle text-cozy-sage"></i> Log Entry
                                 </h3>
 
-                                <form id="dailyLogForm" onsubmit="saveDailyLog(event)" class="space-y-3">
+                                <form id="dailyLogForm" class="space-y-3">
                                     <div>
                                         <label class="block text-[11px] font-semibold text-gray-600 mb-1">Date & Time</label>
                                         <input type="datetime-local" id="logDateTime" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
@@ -354,7 +349,7 @@
                                     <h3 class="text-base sm:text-lg font-bold text-cozy-darkText">Care & Medication Routines</h3>
                                     <p class="text-xs text-gray-500">Feeding, medication, or wellness schedules</p>
                                 </div>
-                                <button onclick="openAddTaskModal()" class="bg-cozy-sage text-white text-xs px-3 py-2 rounded-xl font-medium hover:bg-cozy-sageDark transition flex-shrink-0">
+                                <button data-action="add-task" class="bg-cozy-sage text-white text-xs px-3 py-2 rounded-xl font-medium hover:bg-cozy-sageDark transition flex-shrink-0">
                                     <i class="fa-solid fa-plus mr-1"></i> Add Task
                                 </button>
                             </div>
@@ -383,7 +378,7 @@
                         <div class="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-amber-50">
                             <h3 class="text-base sm:text-lg font-bold text-cozy-darkText mb-4">Medical Records</h3>
 
-                            <form id="medicalForm" onsubmit="saveMedicalNotes(event)" class="space-y-4">
+                            <form id="medicalForm" class="space-y-4">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">Spay / Neuter Status</label>
@@ -430,12 +425,12 @@
 
     <div id="petModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <button onclick="closePetModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <button data-action="close-pet-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <h3 id="petModalTitle" class="text-lg sm:text-xl font-bold text-cozy-darkText mb-4">Add New Foster Pet</h3>
 
-            <form id="petForm" onsubmit="handlePetFormSubmit(event)" class="space-y-3.5">
+            <form id="petForm" class="space-y-3.5">
                 <input type="hidden" id="petFormId">
 
                 <div>
@@ -499,7 +494,7 @@
                 <!-- Photo Upload Input -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Upload Photo (from Camera Roll)</label>
-                    <input type="file" id="petImageFileInput" accept="image/*" onchange="previewSelectedImage(event)" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cozy-cream file:text-cozy-darkText hover:file:bg-amber-100 cursor-pointer">
+                    <input type="file" id="petImageFileInput" accept="image/*" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cozy-cream file:text-cozy-darkText hover:file:bg-amber-100 cursor-pointer">
 
                     <div id="photoPreviewContainer" class="mt-2.5 hidden flex items-center space-x-3">
                         <img id="photoPreviewImg" src="" class="w-14 h-14 rounded-xl object-cover border border-cozy-sage">
@@ -508,7 +503,7 @@
                 </div>
 
                 <div class="pt-2 flex justify-end space-x-2">
-                    <button type="button" onclick="closePetModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-medium">Cancel</button>
+                    <button type="button" data-action="close-pet-modal" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs sm:text-sm font-medium">Cancel</button>
                     <button type="submit" class="px-5 py-2 bg-cozy-sage hover:bg-cozy-sageDark text-white rounded-xl text-xs sm:text-sm font-medium shadow-sm">Save Foster</button>
                 </div>
             </form>
@@ -517,12 +512,12 @@
 
     <div id="taskModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-xl relative">
-            <button onclick="closeTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <button data-action="close-task-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <h3 class="text-lg sm:text-xl font-bold text-cozy-darkText mb-4">Add Routine Care Item</h3>
 
-            <form id="taskForm" onsubmit="handleTaskFormSubmit(event)" class="space-y-3.5">
+            <form id="taskForm" class="space-y-3.5">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Task Description *</label>
                     <input type="text" id="taskTitle" required placeholder="e.g. Eye Drops / Bottle Feeding" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
@@ -532,7 +527,7 @@
                     <input type="text" id="taskTime" placeholder="e.g. 8:00 AM & 8:00 PM" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
                 </div>
                 <div class="pt-2 flex justify-end space-x-2">
-                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs sm:text-sm font-medium">Cancel</button>
+                    <button type="button" data-action="close-task-modal" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs sm:text-sm font-medium">Cancel</button>
                     <button type="submit" class="px-5 py-2 bg-cozy-sage text-white rounded-xl text-xs sm:text-sm font-medium">Add Routine</button>
                 </div>
             </form>
@@ -545,8 +540,18 @@
         <span id="toastMsg">Action saved successfully!</span>
     </div>
 
-    <script>
-        // Firebase Configuration
+    <script type="module">
+        // ─────────────────────────────────────────────────────────────
+        // Firebase (modular SDK, ES modules)
+        // ─────────────────────────────────────────────────────────────
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import {
+            getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut
+        } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import {
+            getDatabase, ref, onValue, set
+        } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+
         const firebaseConfig = {
             apiKey: "AIzaSyDqPjoCg0gYKmxBkF3-7eqYilmLdJqvGU8",
             authDomain: "house-motives.firebaseapp.com",
@@ -557,12 +562,36 @@
             appId: "1:338470965043:web:a68b80174ba494d4ce3846"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-        let state = {
+        // ─────────────────────────────────────────────────────────────
+        // Constants & state
+        // ─────────────────────────────────────────────────────────────
+        const CONVERSION_TO_GRAMS = Object.freeze({
+            g: 1,
+            oz: 28.349523125,
+            lbs: 453.59237,
+            kg: 1000
+        });
+
+        const KITTEN_MILESTONES = Object.freeze([
+            { id: 'm1', title: 'Eyes Completely Opened', category: 'Physical' },
+            { id: 'm2', title: 'Ears Unfolded & Hearing', category: 'Physical' },
+            { id: 'm3', title: 'First Steps / Wobbly Walking', category: 'Motor' },
+            { id: 'm4', title: 'First Wet Food / Weaning Started', category: 'Diet' },
+            { id: 'm5', title: 'Litter Box Trained', category: 'Behavior' },
+            { id: 'm6', title: 'Self-Grooming Observed', category: 'Behavior' },
+            { id: 'm7', title: 'First Bath Completed', category: 'Care' },
+            { id: 'm8', title: 'Socialized / Purring', category: 'Behavior' },
+            { id: 'm9', title: 'Reached Target Adoption Weight (2 lbs)', category: 'Milestone' }
+        ]);
+
+        const FILTER_ACTIVE = ['bg-cozy-sage', 'text-white'];
+        const FILTER_INACTIVE = ['bg-gray-100', 'text-gray-600', 'hover:bg-gray-200'];
+
+        const state = {
             user: null,
             pets: [],
             activePetId: null,
@@ -572,368 +601,300 @@
             hasUserModifiedTime: false
         };
 
-        let weightChartInstance = null;
+        let weightChart = null;
+        let unsubscribePets = null;
+        let toastTimer = null;
 
-        const CONVERSION_TO_GRAMS = {
-            'g': 1,
-            'oz': 28.349523125,
-            'lbs': 453.59237,
-            'kg': 1000
+        // ─────────────────────────────────────────────────────────────
+        // Small helpers
+        // ─────────────────────────────────────────────────────────────
+        const $ = (id) => document.getElementById(id);
+
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+
+        const uid = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+        const isDesktopScreen = () => window.innerWidth >= 768;
+
+        // Firebase RTDB returns arrays as objects when indices have holes, and drops empty arrays.
+        const toArray = (value) => {
+            if (Array.isArray(value)) return value.filter(Boolean);
+            if (value && typeof value === 'object') return Object.values(value).filter(Boolean);
+            return [];
         };
 
-        // Multi-directional conversion function for g, oz, lbs, kg
+        const newMilestones = () => KITTEN_MILESTONES.map((m) => ({ ...m, done: false, dateDone: '' }));
+
+        const getActivePet = () => state.pets.find((p) => p.id === state.activePetId) ?? null;
+
+        const getStatusBadgeClass = (status) => ({
+            Current: 'bg-emerald-100 text-emerald-800',
+            Incoming: 'bg-amber-100 text-amber-800',
+            Former: 'bg-indigo-100 text-indigo-800'
+        }[status] ?? 'bg-gray-100 text-gray-700');
+
+        const avatarFor = (pet, size = 100) =>
+            pet.image || `https://placehold.co/${size}x${size}/84A59D/ffffff?text=${encodeURIComponent((pet.name ?? '?').charAt(0))}`;
+
+        /** Fill in fields Firebase drops (empty arrays) or older records may lack. */
+        const normalizePet = (raw) => ({
+            species: 'Kitten',
+            age: '',
+            intakeDate: '',
+            targetWeight: '',
+            targetWeightUnit: 'g',
+            status: 'Current',
+            image: '',
+            ...raw,
+            siblings: toArray(raw.siblings),
+            logs: toArray(raw.logs),
+            tasks: toArray(raw.tasks),
+            milestones: toArray(raw.milestones),
+            medical: {
+                spayStatus: 'Intact (Pending)',
+                microchip: '',
+                vaccines: '',
+                deworming: '',
+                notes: '',
+                ...(raw.medical ?? {})
+            }
+        });
+
         function convertWeight(value, fromUnit, toUnit) {
-            if (value === null || value === undefined || isNaN(value)) return null;
+            if (value === null || value === undefined || value === '' || Number.isNaN(Number(value))) return null;
             if (fromUnit === toUnit) return Number(value);
-            
-            const valueInGrams = Number(value) * (CONVERSION_TO_GRAMS[fromUnit] || 1);
-            const convertedValue = valueInGrams / (CONVERSION_TO_GRAMS[toUnit] || 1);
-            
-            // Precision formatting based on target unit
-            if (toUnit === 'g') return Math.round(convertedValue);
-            if (toUnit === 'oz') return Number(convertedValue.toFixed(2));
-            if (toUnit === 'lbs' || toUnit === 'kg') return Number(convertedValue.toFixed(3));
-            return Number(convertedValue.toFixed(2));
-        }
 
-        const KITTEN_MILESTONES = [
-            { id: 'm1', title: 'Eyes Completely Opened', category: 'Physical', done: false, dateDone: '' },
-            { id: 'm2', title: 'Ears Unfolded & Hearing', category: 'Physical', done: false, dateDone: '' },
-            { id: 'm3', title: 'First Steps / Wobbly Walking', category: 'Motor', done: false, dateDone: '' },
-            { id: 'm4', title: 'First Wet Food / Weaning Started', category: 'Diet', done: false, dateDone: '' },
-            { id: 'm5', title: 'Litter Box Trained', category: 'Behavior', done: false, dateDone: '' },
-            { id: 'm6', title: 'Self-Grooming Observed', category: 'Behavior', done: false, dateDone: '' },
-            { id: 'm7', title: 'First Bath Completed', category: 'Care', done: false, dateDone: '' },
-            { id: 'm8', title: 'Socialized / Purring', category: 'Behavior', done: false, dateDone: '' },
-            { id: 'm9', title: 'Reached Target Adoption Weight (2 lbs)', category: 'Milestone', done: false, dateDone: '' }
-        ];
+            const grams = Number(value) * (CONVERSION_TO_GRAMS[fromUnit] ?? 1);
+            const converted = grams / (CONVERSION_TO_GRAMS[toUnit] ?? 1);
 
-        // Seed data for initial fallback
-        const SEED_PETS = [
-            {
-                id: 'foster-mochi',
-                name: 'Mochi',
-                species: 'Kitten',
-                age: '4 Weeks',
-                intakeDate: '2026-09-10',
-                targetWeight: '900',
-                targetWeightUnit: 'g',
-                status: 'Current',
-                image: '',
-                siblings: ['foster-matcha'],
-                logs: [
-                    { id: 'l1', dateTime: '2026-09-27T08:00', weight: 380, unit: 'g', food: '15ml KMR', bowel: 'Normal', demeanor: 'Playful & Active', notes: 'Very vocal for breakfast' },
-                    { id: 'l2', dateTime: '2026-09-28T08:00', weight: 410, unit: 'g', food: '18ml KMR + Wet Gruel', bowel: 'Normal', demeanor: 'Playful & Active', notes: 'Licking gruel off dish!' }
-                ],
-                tasks: [
-                    { id: 't1', title: 'Morning Feeding & Weigh-in', time: '8:00 AM', done: true },
-                    { id: 't2', title: 'Eye Drops', time: '12:00 PM', done: false }
-                ],
-                milestones: JSON.parse(JSON.stringify(KITTEN_MILESTONES)),
-                medical: { spayStatus: 'Intact (Pending)', microchip: '985141002998112', vaccines: 'FVRCP #1 given on 09/20.', deworming: 'Pyrantel 0.4ml given 09/12.', notes: 'Mild eye discharge clearing up.' }
-            },
-            {
-                id: 'foster-matcha',
-                name: 'Matcha',
-                species: 'Kitten',
-                age: '4 Weeks',
-                intakeDate: '2026-09-10',
-                targetWeight: '900',
-                targetWeightUnit: 'g',
-                status: 'Current',
-                image: '',
-                siblings: ['foster-mochi'],
-                logs: [
-                    { id: 'l10', dateTime: '2026-09-28T08:00', weight: 395, unit: 'g', food: '18ml KMR', bowel: 'Normal', demeanor: 'Calm & Content', notes: 'Gained steadily' }
-                ],
-                tasks: [],
-                milestones: JSON.parse(JSON.stringify(KITTEN_MILESTONES)),
-                medical: { spayStatus: 'Intact (Pending)', microchip: '', vaccines: '', deworming: '', notes: '' }
-            }
-        ];
-
-        window.onload = function() {
-            resetLogTimeField();
-            attachDynamicTimeListeners();
-
-            window.addEventListener('resize', handleViewportResize);
-
-            // Set initial auto-selection on desktop only
-            if (isDesktopScreen() && !state.activePetId && state.pets.length > 0) {
-                state.activePetId = state.pets[0].id;
-            }
-
-            // Listen for Auth State Changes
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    state.user = user;
-                    updateUserUI(true);
-                    attachFirebaseListeners();
-                } else {
-                    state.user = null;
-                    updateUserUI(false);
-                    loadLocalStorage();
-                }
-            });
-        };
-
-        // Date-time input handling logic
-        function resetLogTimeField() {
-            if (!state.hasUserModifiedTime) {
-                const now = new Date();
-                const offset = now.getTimezoneOffset() * 60000;
-                const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
-                const input = document.getElementById('logDateTime');
-                if (input) input.value = localISOTime;
+            switch (toUnit) {
+                case 'g': return Math.round(converted);
+                case 'oz': return Number(converted.toFixed(2));
+                case 'lbs':
+                case 'kg': return Number(converted.toFixed(3));
+                default: return Number(converted.toFixed(2));
             }
         }
 
-        function attachDynamicTimeListeners() {
-            const formInputs = document.querySelectorAll('#dailyLogForm input, #dailyLogForm select, #dailyLogForm textarea');
-            formInputs.forEach(input => {
-                if (input.id === 'logDateTime') {
-                    input.addEventListener('input', () => {
-                        state.hasUserModifiedTime = true;
-                    });
-                } else {
-                    input.addEventListener('focus', () => {
-                        resetLogTimeField();
-                    });
-                }
-            });
-        }
-
-        function handleGoogleSignIn() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => {
-                console.error("Auth Error:", error);
-                showToast("Sign-in error. Try again.");
-            });
-        }
-
-        function handleSignOut() {
-            auth.signOut().then(() => {
-                showToast("Signed out.");
-            });
-        }
-
-        function updateUserUI(isLoggedIn) {
-            const userPill = document.getElementById('userInfoPill');
-            const signInBtn = document.getElementById('googleSignInBtn');
-            const authOverlay = document.getElementById('authOverlayScreen');
-
-            if (isLoggedIn && state.user) {
-                userPill.classList.remove('hidden');
-                signInBtn.classList.add('hidden');
-                authOverlay.classList.add('hidden');
-                document.getElementById('userName').innerText = state.user.displayName || state.user.email;
-                document.getElementById('userAvatar').src = state.user.photoURL || 'https://placehold.co/100x100/84A59D/ffffff?text=U';
-            } else {
-                userPill.classList.add('hidden');
-                signInBtn.classList.remove('hidden');
-                authOverlay.classList.remove('hidden');
-            }
-        }
-
-        function isDesktopScreen() {
-            return window.innerWidth >= 768;
-        }
-
-        function handleViewportResize() {
-            if (isDesktopScreen()) {
-                if (!state.activePetId && state.pets.length > 0) {
-                    state.activePetId = state.pets[0].id;
-                }
-                document.getElementById('rosterSidebar').classList.remove('hidden');
-                document.getElementById('detailWorkspace').classList.remove('hidden');
-            } else {
-                if (state.activePetId) {
-                    document.getElementById('rosterSidebar').classList.add('hidden');
-                    document.getElementById('detailWorkspace').classList.remove('hidden');
-                } else {
-                    document.getElementById('rosterSidebar').classList.remove('hidden');
-                    document.getElementById('detailWorkspace').classList.add('hidden');
-                }
-            }
-        }
-
-        function attachFirebaseListeners() {
-            if (!state.user) return;
-            const fostersRef = db.ref(`fosters/${state.user.uid}`);
-            fostersRef.on('value', snapshot => {
-                const data = snapshot.val();
-                if (data) {
-                    state.pets = Array.isArray(data) ? data : Object.values(data);
-                } else {
-                    state.pets = SEED_PETS;
-                    saveToDatabase();
-                }
-
-                // Auto-select first pet ONLY on desktop views
-                if (isDesktopScreen() && state.pets.length > 0 && !state.pets.find(p => p.id === state.activePetId)) {
-                    state.activePetId = state.pets[0].id;
-                }
-
-                renderRoster();
-                if (state.activePetId) {
-                    renderActivePetDetail();
-                } else {
-                    handleViewportResize();
-                }
-            });
-        }
-
-        function saveToDatabase() {
-            if (state.user) {
-                db.ref(`fosters/${state.user.uid}`).set(state.pets);
-            } else {
-                localStorage.setItem('fostery_local_cache', JSON.stringify(state.pets));
-            }
-        }
-
-        function loadLocalStorage() {
-            const cache = localStorage.getItem('fostery_local_cache');
-            if (cache) {
-                try { state.pets = JSON.parse(cache); } catch(e) { state.pets = SEED_PETS; }
-            } else {
-                state.pets = SEED_PETS;
-            }
-            
-            // Auto-select first pet ONLY on desktop screens
-            if (isDesktopScreen() && state.pets.length > 0) {
-                state.activePetId = state.pets[0].id;
-            }
-
-            renderRoster();
-            if (state.activePetId) {
-                renderActivePetDetail();
-            } else {
-                handleViewportResize();
-            }
-        }
+        const hasWeight = (log) => log.weight !== undefined && log.weight !== null && log.weight !== '';
 
         function showToast(msg) {
-            const toast = document.getElementById('toastBox');
-            document.getElementById('toastMsg').innerText = msg;
+            const toast = $('toastBox');
+            $('toastMsg').textContent = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        /** Downscale photos before they go into the Realtime Database as base64. */
+        function resizeImageToDataUrl(file, maxDim = 480, quality = 0.82) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(reader.error);
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('Could not load image'));
+                    img.onload = () => {
+                        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.round(img.width * scale);
+                        canvas.height = Math.round(img.height * scale);
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // Persistence (Firebase Realtime Database)
+        // ─────────────────────────────────────────────────────────────
+        async function saveToDatabase() {
+            if (!state.user) {
+                showToast('Sign in to save changes.');
+                return false;
+            }
+            try {
+                // JSON round-trip strips `undefined`, which RTDB rejects.
+                const payload = JSON.parse(JSON.stringify(state.pets));
+                await set(ref(db, `fosters/${state.user.uid}`), payload);
+                return true;
+            } catch (err) {
+                console.error('Save error:', err);
+                showToast('Could not save. Check your connection.');
+                return false;
+            }
+        }
+
+        function subscribeToPets(userId) {
+            unsubscribePets?.();
+            unsubscribePets = onValue(
+                ref(db, `fosters/${userId}`),
+                (snapshot) => {
+                    state.pets = toArray(snapshot.val()).map(normalizePet);
+                    render();
+                },
+                (err) => {
+                    console.error('Database read error:', err);
+                    showToast('Could not load your fosters.');
+                }
+            );
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // Auth
+        // ─────────────────────────────────────────────────────────────
+        async function handleGoogleSignIn() {
+            try {
+                await signInWithPopup(auth, new GoogleAuthProvider());
+            } catch (err) {
+                console.error('Auth Error:', err);
+                showToast('Sign-in error. Try again.');
+            }
+        }
+
+        async function handleSignOut() {
+            await signOut(auth);
+            showToast('Signed out.');
+        }
+
+        function updateUserUI() {
+            const loggedIn = Boolean(state.user);
+            $('userInfoPill').classList.toggle('hidden', !loggedIn);
+            $('googleSignInBtn').classList.toggle('hidden', loggedIn);
+            $('authOverlayScreen').classList.toggle('hidden', loggedIn);
+
+            if (loggedIn) {
+                $('userName').textContent = state.user.displayName || state.user.email;
+                $('userAvatar').src = state.user.photoURL || 'https://placehold.co/100x100/84A59D/ffffff?text=U';
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // Layout / navigation
+        // ─────────────────────────────────────────────────────────────
+        function getFilteredPets() {
+            return state.filterStatus === 'all'
+                ? state.pets
+                : state.pets.filter((p) => p.status === state.filterStatus);
+        }
+
+        /** Keep activePetId valid; auto-select the first visible pet on desktop only. */
+        function ensureActivePet() {
+            if (state.activePetId && !getActivePet()) state.activePetId = null;
+            if (!state.activePetId && isDesktopScreen()) {
+                state.activePetId = getFilteredPets()[0]?.id ?? null;
+            }
+        }
+
+        function syncLayout() {
+            const roster = $('rosterSidebar');
+            const detail = $('detailWorkspace');
+
+            if (isDesktopScreen()) {
+                roster.classList.remove('hidden');
+                detail.classList.remove('hidden');
+            } else if (state.activePetId) {
+                roster.classList.add('hidden');
+                detail.classList.remove('hidden');
+            } else {
+                roster.classList.remove('hidden');
+                detail.classList.add('hidden');
+            }
+        }
+
+        function render() {
+            ensureActivePet();
+            renderRoster();
+            renderActivePetDetail();
+            syncLayout();
+        }
+
+        function setFilterUI(status) {
+            document.querySelectorAll('.filter-btn').forEach((btn) => {
+                const active = btn.dataset.filter === status;
+                btn.classList.remove(...FILTER_ACTIVE, ...FILTER_INACTIVE);
+                btn.classList.add(...(active ? FILTER_ACTIVE : FILTER_INACTIVE));
+            });
         }
 
         function filterStatus(status) {
             state.filterStatus = status;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap";
-            });
-            const activeMap = {
-                'all': 'filter-all',
-                'Incoming': 'filter-incoming',
-                'Current': 'filter-current',
-                'Former': 'filter-former'
-            };
-            if (activeMap[status]) {
-                const el = document.getElementById(activeMap[status]);
-                if (el) el.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap";
-            }
-            
+            setFilterUI(status);
             showRosterView();
-            renderRoster();
         }
 
         function showRosterView() {
-            if (!isDesktopScreen()) {
-                state.activePetId = null;
-            }
-            handleViewportResize();
-            renderRoster();
-        }
-
-        function showDetailView() {
-            handleViewportResize();
-        }
-
-        function renderRoster() {
-            const container = document.getElementById('rosterCardsList');
-            container.innerHTML = '';
-
-            let filtered = state.pets;
-            if (state.filterStatus !== 'all') {
-                filtered = state.pets.filter(p => p.status === state.filterStatus);
-            }
-
-            document.getElementById('count-all').innerText = state.pets.length;
-            document.getElementById('count-incoming').innerText = state.pets.filter(p => p.status === 'Incoming').length;
-            document.getElementById('count-current').innerText = state.pets.filter(p => p.status === 'Current').length;
-            document.getElementById('count-former').innerText = state.pets.filter(p => p.status === 'Former').length;
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-gray-400 bg-white rounded-2xl text-xs sm:text-sm">No fosters in this status.</div>`;
-            }
-
-            filtered.forEach(pet => {
-                const isSelected = pet.id === state.activePetId;
-                const weightLogs = (pet.logs || []).filter(l => l.weight !== undefined && l.weight !== null && l.weight !== '');
-                const latestWeightLog = weightLogs.length > 0 ? weightLogs[weightLogs.length - 1] : null;
-                
-                let weightDisplay = 'No logs';
-                if (latestWeightLog) {
-                    const baseUnit = pet.targetWeightUnit || 'g';
-                    const enteredUnit = latestWeightLog.unit || baseUnit;
-                    const normalizedWeight = convertWeight(latestWeightLog.weight, enteredUnit, baseUnit);
-                    weightDisplay = `${normalizedWeight} ${baseUnit}`;
-                }
-
-                const card = document.createElement('div');
-                card.onclick = () => {
-                    selectActivePet(pet.id);
-                };
-                card.className = `p-3.5 rounded-2xl cursor-pointer transition flex items-center justify-between ${
-                    isSelected ? 'bg-cozy-cream border-2 border-cozy-sage shadow-sm' : 'bg-white hover:bg-amber-50/50 border border-amber-50'
-                }`;
-
-                const avatarSrc = pet.image || `https://placehold.co/100x100/84A59D/ffffff?text=${pet.name.charAt(0)}`;
-
-                card.innerHTML = `
-                    <div class="flex items-center space-x-3 min-w-0">
-                        <img src="${avatarSrc}" alt="${pet.name}" class="w-12 h-12 rounded-xl object-cover border border-amber-100 bg-gray-50 flex-shrink-0">
-                        <div class="min-w-0">
-                            <h4 class="font-bold text-cozy-darkText text-xs sm:text-sm truncate">${pet.name}</h4>
-                            <p class="text-[11px] text-gray-500 truncate">${pet.species || 'Kitten'}</p>
-                            <span class="inline-block text-[10px] px-2 py-0.5 mt-0.5 rounded-full ${getStatusBadgeClass(pet.status)}">
-                                ${pet.status}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="text-right flex-shrink-0 ml-2">
-                        <span class="text-[10px] text-gray-400 block">Weight</span>
-                        <span class="text-xs sm:text-sm font-bold text-cozy-sage">${weightDisplay}</span>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function getStatusBadgeClass(status) {
-            switch(status) {
-                case 'Current': return 'bg-emerald-100 text-emerald-800';
-                case 'Incoming': return 'bg-amber-100 text-amber-800';
-                case 'Former': return 'bg-indigo-100 text-indigo-800';
-                default: return 'bg-gray-100 text-gray-700';
-            }
+            if (!isDesktopScreen()) state.activePetId = null;
+            render();
         }
 
         function selectActivePet(id) {
             state.activePetId = id;
-            renderRoster();
-            renderActivePetDetail();
-            showDetailView();
+            render();
         }
 
+        // ─────────────────────────────────────────────────────────────
+        // Roster
+        // ─────────────────────────────────────────────────────────────
+        function renderRoster() {
+            const container = $('rosterCardsList');
+            const filtered = getFilteredPets();
+
+            const countBy = (status) => state.pets.filter((p) => p.status === status).length;
+            $('count-all').textContent = state.pets.length;
+            $('count-incoming').textContent = countBy('Incoming');
+            $('count-current').textContent = countBy('Current');
+            $('count-former').textContent = countBy('Former');
+
+            if (filtered.length === 0) {
+                const msg = state.pets.length === 0
+                    ? 'No fosters yet. Tap “New Foster” to add your first one.'
+                    : 'No fosters in this status.';
+                container.innerHTML = `<div class="p-6 text-center text-gray-400 bg-white rounded-2xl text-xs sm:text-sm">${msg}</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map((pet) => {
+                const isSelected = pet.id === state.activePetId;
+                const baseUnit = pet.targetWeightUnit || 'g';
+                const latest = pet.logs.filter(hasWeight).at(-1);
+                const weightDisplay = latest
+                    ? `${convertWeight(latest.weight, latest.unit || baseUnit, baseUnit)} ${baseUnit}`
+                    : 'No logs';
+
+                return `
+                    <div data-action="select-pet" data-pet-id="${escapeHtml(pet.id)}"
+                         class="p-3.5 rounded-2xl cursor-pointer transition flex items-center justify-between ${
+                             isSelected ? 'bg-cozy-cream border-2 border-cozy-sage shadow-sm' : 'bg-white hover:bg-amber-50/50 border border-amber-50'
+                         }">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <img src="${escapeHtml(avatarFor(pet))}" alt="${escapeHtml(pet.name)}" class="w-12 h-12 rounded-xl object-cover border border-amber-100 bg-gray-50 flex-shrink-0">
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-cozy-darkText text-xs sm:text-sm truncate">${escapeHtml(pet.name)}</h4>
+                                <p class="text-[11px] text-gray-500 truncate">${escapeHtml(pet.species || 'Kitten')}</p>
+                                <span class="inline-block text-[10px] px-2 py-0.5 mt-0.5 rounded-full ${getStatusBadgeClass(pet.status)}">${escapeHtml(pet.status)}</span>
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0 ml-2">
+                            <span class="text-[10px] text-gray-400 block">Weight</span>
+                            <span class="text-xs sm:text-sm font-bold text-cozy-sage">${escapeHtml(weightDisplay)}</span>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // Pet detail
+        // ─────────────────────────────────────────────────────────────
         function renderActivePetDetail() {
-            const pet = state.pets.find(p => p.id === state.activePetId);
-            const detailView = document.getElementById('petDetailWorkspace');
-            const noPetView = document.getElementById('noPetSelectedView');
+            const pet = getActivePet();
+            const detailView = $('petDetailWorkspace');
+            const noPetView = $('noPetSelectedView');
 
             if (!pet) {
                 detailView.classList.add('hidden');
@@ -944,166 +905,162 @@
             detailView.classList.remove('hidden');
             noPetView.classList.add('hidden');
 
-            document.getElementById('detailName').innerText = pet.name;
-            document.getElementById('detailImg').src = pet.image || `https://placehold.co/150x150/84A59D/ffffff?text=${pet.name.charAt(0)}`;
-            document.getElementById('detailBreedAge').innerText = `${pet.species || 'Kitten'} • ${pet.age || 'Age N/A'}`;
-            document.getElementById('detailIntake').innerText = pet.intakeDate || 'N/A';
-            
-            const targetWeightStr = pet.targetWeight ? `${pet.targetWeight} ${pet.targetWeightUnit || 'g'}` : 'Not set';
-            document.getElementById('detailTarget').innerText = targetWeightStr;
-            document.getElementById('detailMicrochip').innerText = pet.medical?.microchip || 'N/A';
+            $('detailName').textContent = pet.name;
+            $('detailImg').src = avatarFor(pet, 150);
+            $('detailBreedAge').textContent = `${pet.species || 'Kitten'} • ${pet.age || 'Age N/A'}`;
+            $('detailIntake').textContent = pet.intakeDate || 'N/A';
+            $('detailTarget').textContent = pet.targetWeight ? `${pet.targetWeight} ${pet.targetWeightUnit || 'g'}` : 'Not set';
+            $('detailMicrochip').textContent = pet.medical.microchip || 'N/A';
 
-            // Auto-align default weight log dropdown to match pet base unit
-            const logUnitSelect = document.getElementById('logWeightUnit');
-            if (logUnitSelect && pet.targetWeightUnit) {
-                logUnitSelect.value = pet.targetWeightUnit;
-            }
+            // Default the log-entry unit to the pet's base unit
+            if (pet.targetWeightUnit) $('logWeightUnit').value = pet.targetWeightUnit;
 
-            const badge = document.getElementById('detailStatusBadge');
-            badge.innerText = pet.status;
+            const badge = $('detailStatusBadge');
+            badge.textContent = pet.status;
             badge.className = `px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getStatusBadgeClass(pet.status)}`;
 
-            // Hide Kitten Milestones tab for Adult Cats
-            const milestonesTabBtn = document.getElementById('tab-milestones');
-            if (pet.species === 'Cat') {
-                milestonesTabBtn.classList.add('hidden');
-                if (state.activeTab === 'milestones') {
-                    switchTab('dailyLog');
-                }
-            } else {
-                milestonesTabBtn.classList.remove('hidden');
-            }
+            // Milestones tab is kitten-only
+            const isCat = pet.species === 'Cat';
+            $('tab-milestones').classList.toggle('hidden', isCat);
+            if (isCat && state.activeTab === 'milestones') state.activeTab = 'dailyLog';
 
             renderSiblingsBadges(pet);
+            updateTabUI();
             renderTabContent();
         }
 
         function renderSiblingsBadges(pet) {
-            const container = document.getElementById('siblingsBadgeContainer');
-            container.innerHTML = '';
+            const container = $('siblingsBadgeContainer');
+            const siblings = pet.siblings
+                .map((id) => state.pets.find((p) => p.id === id))
+                .filter(Boolean);
 
-            const siblingIds = pet.siblings || [];
-            if (siblingIds.length === 0) return;
+            if (siblings.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
 
-            const label = document.createElement('span');
-            label.className = "text-[10px] font-semibold text-gray-400 uppercase mr-1";
-            label.innerText = "Littermates:";
-            container.appendChild(label);
+            container.innerHTML = `
+                <span class="text-[10px] font-semibold text-gray-400 uppercase mr-1">Littermates:</span>
+                ${siblings.map((s) => `
+                    <button data-action="select-pet" data-pet-id="${escapeHtml(s.id)}"
+                            class="inline-flex items-center space-x-1 px-2 py-0.5 bg-amber-100/70 hover:bg-amber-200 text-amber-900 rounded-lg text-[11px] font-medium transition">
+                        <i class="fa-solid fa-users text-[9px] text-cozy-coral"></i> <span>${escapeHtml(s.name)}</span>
+                    </button>`).join('')}`;
+        }
 
-            siblingIds.forEach(sId => {
-                const siblingPet = state.pets.find(p => p.id === sId);
-                if (siblingPet) {
-                    const btn = document.createElement('button');
-                    btn.onclick = () => selectActivePet(siblingPet.id);
-                    btn.className = "inline-flex items-center space-x-1 px-2 py-0.5 bg-amber-100/70 hover:bg-amber-200 text-amber-900 rounded-lg text-[11px] font-medium transition";
-                    btn.innerHTML = `<i class="fa-solid fa-users text-[9px] text-cozy-coral"></i> <span>${siblingPet.name}</span>`;
-                    container.appendChild(btn);
-                }
+        // ─────────────────────────────────────────────────────────────
+        // Tabs
+        // ─────────────────────────────────────────────────────────────
+        function updateTabUI() {
+            document.querySelectorAll('[data-action="switch-tab"]').forEach((btn) => {
+                const active = btn.dataset.tab === state.activeTab;
+                btn.classList.toggle('tab-active', active);
+                btn.classList.toggle('text-gray-500', !active);
+                btn.classList.toggle('hover:text-gray-700', !active);
+            });
+            document.querySelectorAll('.tab-pane').forEach((pane) => {
+                pane.classList.toggle('hidden', pane.id !== `pane-${state.activeTab}`);
             });
         }
 
         function switchTab(tabName) {
             state.activeTab = tabName;
-            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
-                btn.className = "pb-2.5 text-gray-500 hover:text-gray-700 transition flex items-center gap-1.5 whitespace-nowrap";
-            });
-
-            document.getElementById(`pane-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}`).className = "pb-2.5 tab-active transition flex items-center gap-1.5 whitespace-nowrap";
-
+            updateTabUI();
             renderTabContent();
         }
 
         function renderTabContent() {
-            const pet = state.pets.find(p => p.id === state.activePetId);
+            const pet = getActivePet();
             if (!pet) return;
 
-            if (state.activeTab === 'dailyLog') {
-                renderDailyLogsAndChart(pet);
-            } else if (state.activeTab === 'schedule') {
-                renderSchedule(pet);
-            } else if (state.activeTab === 'milestones' && pet.species !== 'Cat') {
-                renderMilestones(pet);
-            } else if (state.activeTab === 'medical') {
-                renderMedical(pet);
+            switch (state.activeTab) {
+                case 'dailyLog': return renderDailyLogsAndChart(pet);
+                case 'schedule': return renderSchedule(pet);
+                case 'milestones': return pet.species !== 'Cat' ? renderMilestones(pet) : undefined;
+                case 'medical': return renderMedical(pet);
             }
         }
 
-        function renderDailyLogsAndChart(pet) {
-            const tbody = document.getElementById('logHistoryTable');
-            tbody.innerHTML = '';
+        // ─────────────────────────────────────────────────────────────
+        // Daily logs & chart
+        // ─────────────────────────────────────────────────────────────
+        function resetLogTimeField() {
+            if (state.hasUserModifiedTime) return;
+            const now = new Date();
+            const local = new Date(now - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            const input = $('logDateTime');
+            if (input) input.value = local;
+        }
 
-            const logs = pet.logs || [];
+        function attachDynamicTimeListeners() {
+            $('dailyLogForm').querySelectorAll('input, select, textarea').forEach((input) => {
+                if (input.id === 'logDateTime') {
+                    input.addEventListener('input', () => { state.hasUserModifiedTime = true; });
+                } else {
+                    input.addEventListener('focus', resetLogTimeField);
+                }
+            });
+        }
+
+        function renderDailyLogsAndChart(pet) {
+            const tbody = $('logHistoryTable');
             const baseUnit = pet.targetWeightUnit || 'g';
 
-            if (logs.length === 0) {
+            if (pet.logs.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="p-3 text-center text-gray-400">No daily logs added yet.</td></tr>`;
             } else {
-                [...logs].reverse().forEach(log => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-amber-50/40 transition";
-                    const formattedDate = new Date(log.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
-                    
-                    let rawWeightDisplay = '-';
-                    let normalizedDisplay = '-';
+                tbody.innerHTML = [...pet.logs].reverse().map((log) => {
+                    const date = log.dateTime
+                        ? new Date(log.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+                        : '-';
 
-                    if (log.weight !== undefined && log.weight !== null && log.weight !== '') {
-                        const enteredUnit = log.unit || baseUnit;
-                        rawWeightDisplay = `${log.weight} ${enteredUnit}`;
-                        const normalizedVal = convertWeight(log.weight, enteredUnit, baseUnit);
-                        normalizedDisplay = `${normalizedVal} ${baseUnit}`;
+                    let raw = '-';
+                    let normalized = '-';
+                    if (hasWeight(log)) {
+                        const unit = log.unit || baseUnit;
+                        raw = `${log.weight} ${unit}`;
+                        normalized = `${convertWeight(log.weight, unit, baseUnit)} ${baseUnit}`;
                     }
 
-                    tr.innerHTML = `
-                        <td class="p-2.5 font-medium text-gray-700 whitespace-nowrap">${formattedDate}</td>
-                        <td class="p-2.5 font-semibold text-gray-700 whitespace-nowrap">${rawWeightDisplay}</td>
-                        <td class="p-2.5 font-bold text-cozy-sage whitespace-nowrap">${normalizedDisplay}</td>
-                        <td class="p-2.5 text-gray-600">${log.food || '-'}</td>
-                        <td class="p-2.5"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-[10px]">${log.bowel || 'Normal'}</span></td>
-                        <td class="p-2.5 text-gray-600">${log.demeanor || '-'}</td>
-                        <td class="p-2.5 text-gray-500 max-w-xs truncate">${log.notes || '-'}</td>
-                        <td class="p-2.5 text-right">
-                            <button onclick="deleteDailyLog('${log.id}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash-can"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                    return `
+                        <tr class="hover:bg-amber-50/40 transition">
+                            <td class="p-2.5 font-medium text-gray-700 whitespace-nowrap">${escapeHtml(date)}</td>
+                            <td class="p-2.5 font-semibold text-gray-700 whitespace-nowrap">${escapeHtml(raw)}</td>
+                            <td class="p-2.5 font-bold text-cozy-sage whitespace-nowrap">${escapeHtml(normalized)}</td>
+                            <td class="p-2.5 text-gray-600">${escapeHtml(log.food || '-')}</td>
+                            <td class="p-2.5"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-[10px]">${escapeHtml(log.bowel || 'Normal')}</span></td>
+                            <td class="p-2.5 text-gray-600">${escapeHtml(log.demeanor || '-')}</td>
+                            <td class="p-2.5 text-gray-500 max-w-xs truncate">${escapeHtml(log.notes || '-')}</td>
+                            <td class="p-2.5 text-right">
+                                <button data-action="delete-log" data-id="${escapeHtml(log.id)}" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                        </tr>`;
+                }).join('');
             }
 
             renderChart(pet);
         }
 
         function renderChart(pet) {
-            const ctx = document.getElementById('weightChart').getContext('2d');
-            const logs = pet.logs || [];
             const baseUnit = pet.targetWeightUnit || 'g';
+            const weightLogs = pet.logs.filter(hasWeight);
 
-            const validWeightLogs = logs.filter(l => l.weight !== undefined && l.weight !== null && l.weight !== '');
-
-            const labels = validWeightLogs.map(l => new Date(l.dateTime).toLocaleDateString([], { month: 'numeric', day: 'numeric' }));
-            
-            // Convert and normalize all logged weights into pet's base unit for chart rendering
-            const normalizedWeights = validWeightLogs.map(l => {
-                const entryUnit = l.unit || baseUnit;
-                return convertWeight(l.weight, entryUnit, baseUnit);
-            });
+            const labels = weightLogs.map((l) =>
+                new Date(l.dateTime).toLocaleDateString([], { month: 'numeric', day: 'numeric' }));
+            const weights = weightLogs.map((l) => convertWeight(l.weight, l.unit || baseUnit, baseUnit));
 
             const targetVal = parseFloat(pet.targetWeight) || null;
-            const targetLine = targetVal ? validWeightLogs.map(() => targetVal) : [];
 
-            if (weightChartInstance) {
-                weightChartInstance.destroy();
-            }
-
-            weightChartInstance = new Chart(ctx, {
+            weightChart?.destroy();
+            weightChart = new Chart($('weightChart').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels.length ? labels : ['No Weight Recorded'],
+                    labels,
                     datasets: [
                         {
                             label: `Weight (${baseUnit})`,
-                            data: normalizedWeights.length ? normalizedWeights : [0],
+                            data: weights,
                             borderColor: '#84A59D',
                             backgroundColor: 'rgba(132, 165, 157, 0.15)',
                             fill: true,
@@ -1114,7 +1071,7 @@
                         },
                         ...(targetVal ? [{
                             label: `Target (${baseUnit})`,
-                            data: targetLine,
+                            data: weightLogs.map(() => targetVal),
                             borderColor: '#F28482',
                             borderDash: [5, 5],
                             borderWidth: 2,
@@ -1128,19 +1085,17 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
-                        tooltip: { 
-                            mode: 'index', 
+                        tooltip: {
+                            mode: 'index',
                             intersect: false,
                             callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.parsed.y} ${baseUnit}`;
-                                }
+                                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} ${baseUnit}`
                             }
                         }
                     },
                     scales: {
-                        y: { 
-                            beginAtZero: false, 
+                        y: {
+                            beginAtZero: false,
                             grid: { color: 'rgba(0,0,0,0.05)' },
                             title: { display: true, text: `Weight (${baseUnit})`, font: { size: 10 } }
                         },
@@ -1150,385 +1105,397 @@
             });
         }
 
-        function saveDailyLog(e) {
+        async function saveDailyLog(e) {
             e.preventDefault();
-            const pet = state.pets.find(p => p.id === state.activePetId);
+            const pet = getActivePet();
             if (!pet) return;
 
-            if (!pet.logs) pet.logs = [];
+            const weightRaw = $('logWeight').value;
 
-            const weightRaw = document.getElementById('logWeight').value;
-
-            const newLog = {
-                id: 'log-' + Date.now(),
-                dateTime: document.getElementById('logDateTime').value,
+            pet.logs.push({
+                id: uid('log'),
+                dateTime: $('logDateTime').value,
                 weight: weightRaw !== '' ? parseFloat(weightRaw) : null,
-                unit: document.getElementById('logWeightUnit').value,
-                food: document.getElementById('logFood').value,
-                bowel: document.getElementById('logBowel').value,
-                demeanor: document.getElementById('logDemeanor').value,
-                notes: document.getElementById('logNotes').value
-            };
+                unit: $('logWeightUnit').value,
+                food: $('logFood').value,
+                bowel: $('logBowel').value,
+                demeanor: $('logDemeanor').value,
+                notes: $('logNotes').value
+            });
 
-            pet.logs.push(newLog);
-            saveToDatabase();
-            showToast("Daily log recorded!");
-
-            document.getElementById('logWeight').value = '';
-            document.getElementById('logFood').value = '';
-            document.getElementById('logNotes').value = '';
-
+            $('logWeight').value = '';
+            $('logFood').value = '';
+            $('logNotes').value = '';
             state.hasUserModifiedTime = false;
             resetLogTimeField();
 
-            renderRoster();
-            renderActivePetDetail();
+            render();
+            if (await saveToDatabase()) showToast('Daily log recorded!');
         }
 
-        function deleteDailyLog(logId) {
-            const pet = state.pets.find(p => p.id === state.activePetId);
+        async function deleteDailyLog(logId) {
+            const pet = getActivePet();
             if (!pet) return;
 
-            pet.logs = pet.logs.filter(l => l.id !== logId);
-            saveToDatabase();
-            showToast("Log entry deleted.");
-            renderRoster();
-            renderActivePetDetail();
+            pet.logs = pet.logs.filter((l) => l.id !== logId);
+            render();
+            if (await saveToDatabase()) showToast('Log entry deleted.');
         }
 
+        // ─────────────────────────────────────────────────────────────
+        // Schedule / tasks
+        // ─────────────────────────────────────────────────────────────
         function renderSchedule(pet) {
-            const container = document.getElementById('scheduleTaskList');
-            container.innerHTML = '';
+            const container = $('scheduleTaskList');
 
-            const tasks = pet.tasks || [];
-
-            if (tasks.length === 0) {
+            if (pet.tasks.length === 0) {
                 container.innerHTML = `<p class="text-gray-400 text-xs sm:text-sm text-center py-6">No care routines set. Click above to add a task!</p>`;
                 return;
             }
 
-            tasks.forEach(task => {
-                const item = document.createElement('div');
-                item.className = `flex items-center justify-between p-3 rounded-2xl border transition ${
+            container.innerHTML = pet.tasks.map((task) => `
+                <div class="flex items-center justify-between p-3 rounded-2xl border transition ${
                     task.done ? 'bg-gray-50 border-gray-200 opacity-75' : 'bg-cozy-cream/40 border-amber-100'
-                }`;
-
-                item.innerHTML = `
+                }">
                     <div class="flex items-center space-x-3">
-                        <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTaskDone('${task.id}')"
+                        <input type="checkbox" ${task.done ? 'checked' : ''} data-change="toggle-task" data-id="${escapeHtml(task.id)}"
                                class="w-4 h-4 text-cozy-sage rounded-md focus:ring-cozy-sage border-gray-300 cursor-pointer">
                         <div>
-                            <span class="text-xs sm:text-sm font-semibold text-cozy-darkText ${task.done ? 'line-through text-gray-400' : ''}">${task.title}</span>
-                            <span class="text-[10px] sm:text-xs text-gray-500 block"><i class="fa-regular fa-clock mr-1"></i>${task.time || 'Anytime'}</span>
+                            <span class="text-xs sm:text-sm font-semibold text-cozy-darkText ${task.done ? 'line-through text-gray-400' : ''}">${escapeHtml(task.title)}</span>
+                            <span class="text-[10px] sm:text-xs text-gray-500 block"><i class="fa-regular fa-clock mr-1"></i>${escapeHtml(task.time || 'Anytime')}</span>
                         </div>
                     </div>
-                    <button onclick="deleteTask('${task.id}')" class="text-gray-400 hover:text-red-500 p-1">
+                    <button data-action="delete-task" data-id="${escapeHtml(task.id)}" class="text-gray-400 hover:text-red-500 p-1">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
-                `;
-                container.appendChild(item);
-            });
+                </div>`).join('');
         }
 
-        function toggleTaskDone(taskId) {
-            const pet = state.pets.find(p => p.id === state.activePetId);
-            if (!pet) return;
-            const t = pet.tasks.find(item => item.id === taskId);
-            if (t) {
-                t.done = !t.done;
-                saveToDatabase();
-                renderSchedule(pet);
-            }
-        }
+        async function toggleTaskDone(taskId) {
+            const pet = getActivePet();
+            const task = pet?.tasks.find((t) => t.id === taskId);
+            if (!task) return;
 
-        function deleteTask(taskId) {
-            const pet = state.pets.find(p => p.id === state.activePetId);
-            if (!pet) return;
-            pet.tasks = pet.tasks.filter(t => t.id !== taskId);
-            saveToDatabase();
+            task.done = !task.done;
             renderSchedule(pet);
-            showToast("Routine task removed.");
+            await saveToDatabase();
+        }
+
+        async function deleteTask(taskId) {
+            const pet = getActivePet();
+            if (!pet) return;
+
+            pet.tasks = pet.tasks.filter((t) => t.id !== taskId);
+            renderSchedule(pet);
+            if (await saveToDatabase()) showToast('Routine task removed.');
         }
 
         function openAddTaskModal() {
-            document.getElementById('taskForm').reset();
-            document.getElementById('taskModal').classList.remove('hidden');
+            $('taskForm').reset();
+            $('taskModal').classList.remove('hidden');
         }
 
         function closeTaskModal() {
-            document.getElementById('taskModal').classList.add('hidden');
+            $('taskModal').classList.add('hidden');
         }
 
-        function handleTaskFormSubmit(e) {
+        async function handleTaskFormSubmit(e) {
             e.preventDefault();
-            const pet = state.pets.find(p => p.id === state.activePetId);
+            const pet = getActivePet();
             if (!pet) return;
 
-            if (!pet.tasks) pet.tasks = [];
-
             pet.tasks.push({
-                id: 'task-' + Date.now(),
-                title: document.getElementById('taskTitle').value,
-                time: document.getElementById('taskTime').value,
+                id: uid('task'),
+                title: $('taskTitle').value,
+                time: $('taskTime').value,
                 done: false
             });
 
-            saveToDatabase();
             closeTaskModal();
             renderSchedule(pet);
-            showToast("New care task added!");
+            if (await saveToDatabase()) showToast('New care task added!');
         }
 
-        function renderMilestones(pet) {
-            const container = document.getElementById('milestonesList');
-            container.innerHTML = '';
-
-            let milestones = pet.milestones;
-            if (!milestones || milestones.length === 0) {
-                pet.milestones = JSON.parse(JSON.stringify(KITTEN_MILESTONES));
-                milestones = pet.milestones;
+        // ─────────────────────────────────────────────────────────────
+        // Milestones
+        // ─────────────────────────────────────────────────────────────
+        async function renderMilestones(pet) {
+            if (pet.milestones.length === 0) {
+                pet.milestones = newMilestones();
                 saveToDatabase();
             }
 
-            const completedCount = milestones.filter(m => m.done).length;
-            document.getElementById('milestoneProgressText').innerText = `${completedCount}/${milestones.length} Done`;
+            const done = pet.milestones.filter((m) => m.done).length;
+            $('milestoneProgressText').textContent = `${done}/${pet.milestones.length} Done`;
 
-            milestones.forEach(m => {
-                const card = document.createElement('div');
-                card.className = `p-3 rounded-2xl border transition flex items-start space-x-3 ${
+            $('milestonesList').innerHTML = pet.milestones.map((m) => `
+                <div class="p-3 rounded-2xl border transition flex items-start space-x-3 ${
                     m.done ? 'bg-teal-50/50 border-cozy-sage/40' : 'bg-white border-amber-50 hover:bg-gray-50'
-                }`;
-
-                card.innerHTML = `
-                    <input type="checkbox" ${m.done ? 'checked' : ''} onchange="toggleMilestone('${m.id}')"
+                }">
+                    <input type="checkbox" ${m.done ? 'checked' : ''} data-change="toggle-milestone" data-id="${escapeHtml(m.id)}"
                            class="mt-0.5 w-4 h-4 text-cozy-sage rounded-md focus:ring-cozy-sage border-gray-300 cursor-pointer">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${m.category}</span>
-                            ${m.dateDone ? `<span class="text-[10px] text-cozy-sage font-medium"><i class="fa-solid fa-check mr-1"></i>${m.dateDone}</span>` : ''}
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${escapeHtml(m.category)}</span>
+                            ${m.dateDone ? `<span class="text-[10px] text-cozy-sage font-medium"><i class="fa-solid fa-check mr-1"></i>${escapeHtml(m.dateDone)}</span>` : ''}
                         </div>
-                        <h4 class="text-xs sm:text-sm font-bold text-cozy-darkText mt-1 ${m.done ? 'line-through text-gray-400' : ''}">${m.title}</h4>
+                        <h4 class="text-xs sm:text-sm font-bold text-cozy-darkText mt-1 ${m.done ? 'line-through text-gray-400' : ''}">${escapeHtml(m.title)}</h4>
                     </div>
-                `;
-                container.appendChild(card);
-            });
+                </div>`).join('');
         }
 
-        function toggleMilestone(mId) {
-            const pet = state.pets.find(p => p.id === state.activePetId);
-            if (!pet) return;
+        async function toggleMilestone(milestoneId) {
+            const pet = getActivePet();
+            const m = pet?.milestones.find((item) => item.id === milestoneId);
+            if (!m) return;
 
-            const m = pet.milestones.find(item => item.id === mId);
-            if (m) {
-                m.done = !m.done;
-                m.dateDone = m.done ? new Date().toISOString().split('T')[0] : '';
-                saveToDatabase();
-                renderMilestones(pet);
-                showToast(m.done ? "Milestone reached! 🎉" : "Milestone updated.");
-            }
+            m.done = !m.done;
+            m.dateDone = m.done ? new Date().toISOString().split('T')[0] : '';
+            renderMilestones(pet);
+            if (await saveToDatabase()) showToast(m.done ? 'Milestone reached! 🎉' : 'Milestone updated.');
         }
 
+        // ─────────────────────────────────────────────────────────────
+        // Medical
+        // ─────────────────────────────────────────────────────────────
         function renderMedical(pet) {
-            const med = pet.medical || {};
-            document.getElementById('medSpayStatus').value = med.spayStatus || 'Intact (Pending)';
-            document.getElementById('medMicrochip').value = med.microchip || '';
-            document.getElementById('medVaccines').value = med.vaccines || '';
-            document.getElementById('medDeworming').value = med.deworming || '';
-            document.getElementById('medNotes').value = med.notes || '';
+            const med = pet.medical;
+            $('medSpayStatus').value = med.spayStatus || 'Intact (Pending)';
+            $('medMicrochip').value = med.microchip || '';
+            $('medVaccines').value = med.vaccines || '';
+            $('medDeworming').value = med.deworming || '';
+            $('medNotes').value = med.notes || '';
         }
 
-        function saveMedicalNotes(e) {
+        async function saveMedicalNotes(e) {
             e.preventDefault();
-            const pet = state.pets.find(p => p.id === state.activePetId);
+            const pet = getActivePet();
             if (!pet) return;
 
             pet.medical = {
-                spayStatus: document.getElementById('medSpayStatus').value,
-                microchip: document.getElementById('medMicrochip').value,
-                vaccines: document.getElementById('medVaccines').value,
-                deworming: document.getElementById('medDeworming').value,
-                notes: document.getElementById('medNotes').value
+                spayStatus: $('medSpayStatus').value,
+                microchip: $('medMicrochip').value,
+                vaccines: $('medVaccines').value,
+                deworming: $('medDeworming').value,
+                notes: $('medNotes').value
             };
 
-            saveToDatabase();
-            showToast("Medical record updated!");
-            renderActivePetDetail();
+            render();
+            if (await saveToDatabase()) showToast('Medical record updated!');
         }
 
-        function previewSelectedImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    state.tempBase64Image = e.target.result;
-                    document.getElementById('photoPreviewImg').src = e.target.result;
-                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
+        // ─────────────────────────────────────────────────────────────
+        // Pet modal (create / edit / delete)
+        // ─────────────────────────────────────────────────────────────
+        async function handleImageSelected(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            try {
+                state.tempBase64Image = await resizeImageToDataUrl(file);
+                $('photoPreviewImg').src = state.tempBase64Image;
+                $('photoPreviewContainer').classList.remove('hidden');
+            } catch (err) {
+                console.error('Image error:', err);
+                showToast('Could not read that image.');
             }
         }
 
         function openPetModal(isEdit = false) {
-            const modal = document.getElementById('petModal');
-            const form = document.getElementById('petForm');
-            form.reset();
+            $('petForm').reset();
             state.tempBase64Image = '';
-            document.getElementById('photoPreviewContainer').classList.add('hidden');
+            $('photoPreviewContainer').classList.add('hidden');
 
-            const siblingsBox = document.getElementById('siblingsSelectionBox');
-            siblingsBox.innerHTML = '';
+            const editingPet = isEdit ? getActivePet() : null;
+            if (isEdit && !editingPet) return;
 
-            let currentPetId = isEdit ? state.activePetId : null;
-            let currentSiblings = [];
+            if (editingPet) {
+                $('petModalTitle').textContent = 'Edit Foster Profile';
+                $('petFormId').value = editingPet.id;
+                $('petName').value = editingPet.name;
+                $('petSpecies').value = editingPet.species || 'Kitten';
+                $('petAge').value = editingPet.age || '';
+                $('petIntake').value = editingPet.intakeDate || '';
+                $('petTargetWeight').value = editingPet.targetWeight || '';
+                $('petTargetWeightUnit').value = editingPet.targetWeightUnit || 'g';
+                $('petStatus').value = editingPet.status || 'Current';
 
-            if (isEdit) {
-                const pet = state.pets.find(p => p.id === currentPetId);
-                if (!pet) return;
-
-                document.getElementById('petModalTitle').innerText = "Edit Foster Profile";
-                document.getElementById('petFormId').value = pet.id;
-                document.getElementById('petName').value = pet.name;
-                document.getElementById('petSpecies').value = pet.species || 'Kitten';
-                document.getElementById('petAge').value = pet.age || '';
-                document.getElementById('petIntake').value = pet.intakeDate || '';
-                document.getElementById('petTargetWeight').value = pet.targetWeight || '';
-                document.getElementById('petTargetWeightUnit').value = pet.targetWeightUnit || 'g';
-                document.getElementById('petStatus').value = pet.status || 'Current';
-
-                currentSiblings = pet.siblings || [];
-
-                if (pet.image) {
-                    state.tempBase64Image = pet.image;
-                    document.getElementById('photoPreviewImg').src = pet.image;
-                    document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                if (editingPet.image) {
+                    state.tempBase64Image = editingPet.image;
+                    $('photoPreviewImg').src = editingPet.image;
+                    $('photoPreviewContainer').classList.remove('hidden');
                 }
             } else {
-                document.getElementById('petModalTitle').innerText = "Add New Foster Pet";
-                document.getElementById('petFormId').value = '';
-                document.getElementById('petIntake').value = new Date().toISOString().split('T')[0];
-                document.getElementById('petTargetWeightUnit').value = 'g';
+                $('petModalTitle').textContent = 'Add New Foster Pet';
+                $('petFormId').value = '';
+                $('petIntake').value = new Date().toISOString().split('T')[0];
+                $('petTargetWeightUnit').value = 'g';
+                $('petStatus').value = state.filterStatus === 'all' ? 'Current' : state.filterStatus;
             }
 
-            const eligibleSiblings = state.pets.filter(p => p.id !== currentPetId);
-            if (eligibleSiblings.length === 0) {
-                siblingsBox.innerHTML = `<p class="text-gray-400 text-[11px]">No other fosters available to link.</p>`;
-            } else {
-                eligibleSiblings.forEach(otherPet => {
-                    const isChecked = currentSiblings.includes(otherPet.id);
-                    const row = document.createElement('label');
-                    row.className = "flex items-center space-x-2 p-1 hover:bg-amber-100/50 rounded cursor-pointer";
-                    row.innerHTML = `
-                        <input type="checkbox" name="siblingPets" value="${otherPet.id}" ${isChecked ? 'checked' : ''} class="w-3.5 h-3.5 text-cozy-sage rounded border-gray-300 focus:ring-cozy-sage">
-                        <span class="text-xs text-gray-700 font-medium">${otherPet.name} (${otherPet.species})</span>
-                    `;
-                    siblingsBox.appendChild(row);
-                });
-            }
+            const currentSiblings = editingPet?.siblings ?? [];
+            const eligible = state.pets.filter((p) => p.id !== editingPet?.id);
 
-            modal.classList.remove('hidden');
+            $('siblingsSelectionBox').innerHTML = eligible.length === 0
+                ? `<p class="text-gray-400 text-[11px]">No other fosters available to link.</p>`
+                : eligible.map((other) => `
+                    <label class="flex items-center space-x-2 p-1 hover:bg-amber-100/50 rounded cursor-pointer">
+                        <input type="checkbox" name="siblingPets" value="${escapeHtml(other.id)}" ${currentSiblings.includes(other.id) ? 'checked' : ''}
+                               class="w-3.5 h-3.5 text-cozy-sage rounded border-gray-300 focus:ring-cozy-sage">
+                        <span class="text-xs text-gray-700 font-medium">${escapeHtml(other.name)} (${escapeHtml(other.species)})</span>
+                    </label>`).join('');
+
+            $('petModal').classList.remove('hidden');
         }
 
         function closePetModal() {
-            document.getElementById('petModal').classList.add('hidden');
-        }
-
-        function editCurrentPet() {
-            openPetModal(true);
-        }
-
-        function handlePetFormSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('petFormId').value;
-
-            const siblingCheckboxes = document.querySelectorAll('input[name="siblingPets"]:checked');
-            const selectedSiblingIds = Array.from(siblingCheckboxes).map(cb => cb.value);
-
-            if (id) {
-                const pet = state.pets.find(p => p.id === id);
-                if (pet) {
-                    pet.name = document.getElementById('petName').value;
-                    pet.species = document.getElementById('petSpecies').value;
-                    pet.age = document.getElementById('petAge').value;
-                    pet.intakeDate = document.getElementById('petIntake').value;
-                    pet.targetWeight = document.getElementById('petTargetWeight').value;
-                    pet.targetWeightUnit = document.getElementById('petTargetWeightUnit').value;
-                    pet.status = document.getElementById('petStatus').value;
-                    pet.siblings = selectedSiblingIds;
-                    if (state.tempBase64Image) {
-                        pet.image = state.tempBase64Image;
-                    }
-                }
-
-                syncTwoWaySiblingLinks(id, selectedSiblingIds);
-                showToast("Profile updated!");
-            } else {
-                const newId = 'foster-' + Date.now();
-                const speciesVal = document.getElementById('petSpecies').value;
-                const newPet = {
-                    id: newId,
-                    name: document.getElementById('petName').value,
-                    species: speciesVal,
-                    age: document.getElementById('petAge').value,
-                    intakeDate: document.getElementById('petIntake').value,
-                    targetWeight: document.getElementById('petTargetWeight').value,
-                    targetWeightUnit: document.getElementById('petTargetWeightUnit').value,
-                    status: document.getElementById('petStatus').value,
-                    siblings: selectedSiblingIds,
-                    image: state.tempBase64Image || '',
-                    logs: [],
-                    tasks: [
-                        { id: 't1', title: 'Morning Feeding & Weigh-in', time: '8:00 AM', done: false },
-                        { id: 't2', title: 'Evening Feeding', time: '8:00 PM', done: false }
-                    ],
-                    milestones: speciesVal === 'Kitten' ? JSON.parse(JSON.stringify(KITTEN_MILESTONES)) : [],
-                    medical: { spayStatus: 'Intact (Pending)', microchip: '', vaccines: '', deworming: '', notes: '' }
-                };
-
-                state.pets.push(newPet);
-                state.activePetId = newId;
-
-                syncTwoWaySiblingLinks(newId, selectedSiblingIds);
-                showToast("New foster profile added!");
-            }
-
-            saveToDatabase();
-            closePetModal();
-            renderRoster();
-            renderActivePetDetail();
-            showDetailView();
+            $('petModal').classList.add('hidden');
         }
 
         function syncTwoWaySiblingLinks(petId, siblingIds) {
-            state.pets.forEach(otherPet => {
-                if (otherPet.id === petId) return;
-                if (!otherPet.siblings) otherPet.siblings = [];
-
-                if (siblingIds.includes(otherPet.id)) {
-                    if (!otherPet.siblings.includes(petId)) otherPet.siblings.push(petId);
-                } else {
-                    otherPet.siblings = otherPet.siblings.filter(s => s !== petId);
+            for (const other of state.pets) {
+                if (other.id === petId) continue;
+                const linked = other.siblings.includes(petId);
+                if (siblingIds.includes(other.id)) {
+                    if (!linked) other.siblings.push(petId);
+                } else if (linked) {
+                    other.siblings = other.siblings.filter((s) => s !== petId);
                 }
-            });
-        }
-
-        function deleteCurrentPet() {
-            if (!state.activePetId) return;
-            const pet = state.pets.find(p => p.id === state.activePetId);
-
-            if (confirm(`Are you sure you want to delete the profile for "${pet.name}"?`)) {
-                state.pets = state.pets.filter(p => p.id !== state.activePetId);
-
-                state.pets.forEach(p => {
-                    if (p.siblings) p.siblings = p.siblings.filter(s => s !== pet.id);
-                });
-
-                state.activePetId = isDesktopScreen() && state.pets.length > 0 ? state.pets[0].id : null;
-                saveToDatabase();
-                showToast("Foster profile deleted.");
-                renderRoster();
-                showRosterView();
             }
         }
+
+        async function handlePetFormSubmit(e) {
+            e.preventDefault();
+            const id = $('petFormId').value;
+            const selectedSiblingIds = [...document.querySelectorAll('input[name="siblingPets"]:checked')].map((cb) => cb.value);
+
+            const fields = {
+                name: $('petName').value.trim(),
+                species: $('petSpecies').value,
+                age: $('petAge').value,
+                intakeDate: $('petIntake').value,
+                targetWeight: $('petTargetWeight').value,
+                targetWeightUnit: $('petTargetWeightUnit').value,
+                status: $('petStatus').value,
+                siblings: selectedSiblingIds
+            };
+
+            let savedPetId = id;
+            let message;
+
+            if (id) {
+                const pet = state.pets.find((p) => p.id === id);
+                if (!pet) return;
+                Object.assign(pet, fields);
+                if (state.tempBase64Image) pet.image = state.tempBase64Image;
+                if (pet.species === 'Kitten' && pet.milestones.length === 0) pet.milestones = newMilestones();
+                syncTwoWaySiblingLinks(id, selectedSiblingIds);
+                message = 'Profile updated!';
+            } else {
+                savedPetId = uid('foster');
+                state.pets.push(normalizePet({
+                    id: savedPetId,
+                    ...fields,
+                    image: state.tempBase64Image || '',
+                    tasks: [
+                        { id: uid('task'), title: 'Morning Feeding & Weigh-in', time: '8:00 AM', done: false },
+                        { id: uid('task'), title: 'Evening Feeding', time: '8:00 PM', done: false }
+                    ],
+                    milestones: fields.species === 'Kitten' ? newMilestones() : []
+                }));
+                syncTwoWaySiblingLinks(savedPetId, selectedSiblingIds);
+                message = 'New foster profile added!';
+            }
+
+            // Make sure the pet we just saved is visible in the roster
+            const saved = state.pets.find((p) => p.id === savedPetId);
+            if (saved && state.filterStatus !== 'all' && saved.status !== state.filterStatus) {
+                state.filterStatus = saved.status;
+                setFilterUI(saved.status);
+            }
+            state.activePetId = savedPetId;
+
+            closePetModal();
+            render();
+            if (await saveToDatabase()) showToast(message);
+        }
+
+        async function deleteCurrentPet() {
+            const pet = getActivePet();
+            if (!pet) return;
+            if (!confirm(`Are you sure you want to delete the profile for "${pet.name}"?`)) return;
+
+            state.pets = state.pets.filter((p) => p.id !== pet.id);
+            state.pets.forEach((p) => { p.siblings = p.siblings.filter((s) => s !== pet.id); });
+            state.activePetId = null;
+
+            render();
+            if (await saveToDatabase()) showToast('Foster profile deleted.');
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // Event wiring (delegation replaces inline onclick handlers)
+        // ─────────────────────────────────────────────────────────────
+        const clickActions = {
+            'show-roster': () => showRosterView(),
+            'sign-in': () => handleGoogleSignIn(),
+            'sign-out': () => handleSignOut(),
+            'new-pet': () => openPetModal(false),
+            'edit-pet': () => openPetModal(true),
+            'delete-pet': () => deleteCurrentPet(),
+            'close-pet-modal': () => closePetModal(),
+            'add-task': () => openAddTaskModal(),
+            'close-task-modal': () => closeTaskModal(),
+            'filter': (el) => filterStatus(el.dataset.filter),
+            'switch-tab': (el) => switchTab(el.dataset.tab),
+            'select-pet': (el) => selectActivePet(el.dataset.petId),
+            'delete-log': (el) => deleteDailyLog(el.dataset.id),
+            'delete-task': (el) => deleteTask(el.dataset.id)
+        };
+
+        const changeActions = {
+            'toggle-task': (el) => toggleTaskDone(el.dataset.id),
+            'toggle-milestone': (el) => toggleMilestone(el.dataset.id)
+        };
+
+        document.addEventListener('click', (e) => {
+            const el = e.target.closest('[data-action]');
+            if (el) clickActions[el.dataset.action]?.(el, e);
+        });
+
+        document.addEventListener('change', (e) => {
+            const el = e.target.closest('[data-change]');
+            if (el) changeActions[el.dataset.change]?.(el, e);
+        });
+
+        $('dailyLogForm').addEventListener('submit', saveDailyLog);
+        $('medicalForm').addEventListener('submit', saveMedicalNotes);
+        $('petForm').addEventListener('submit', handlePetFormSubmit);
+        $('taskForm').addEventListener('submit', handleTaskFormSubmit);
+        $('petImageFileInput').addEventListener('change', handleImageSelected);
+        window.addEventListener('resize', syncLayout);
+
+        // ─────────────────────────────────────────────────────────────
+        // Init
+        // ─────────────────────────────────────────────────────────────
+        resetLogTimeField();
+        attachDynamicTimeListeners();
+        setFilterUI(state.filterStatus);
+        render();
+
+        onAuthStateChanged(auth, (user) => {
+            state.user = user;
+            updateUserUI();
+
+            if (user) {
+                subscribeToPets(user.uid);
+            } else {
+                unsubscribePets?.();
+                unsubscribePets = null;
+                state.pets = [];
+                state.activePetId = null;
+                render();
+            }
+        });
     </script>
 </body>
 </html>
