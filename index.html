@@ -76,7 +76,6 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Navigation Header -->
     <header class="bg-white border-b border-amber-100 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
@@ -118,7 +117,6 @@
         </div>
     </header>
 
-    <!-- Auth Overlay Screen -->
     <div id="authOverlayScreen" class="hidden fixed inset-0 bg-cozy-bg/95 z-40 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-lg border border-amber-100 text-center space-y-6">
             <div class="w-20 h-20 bg-cozy-cream text-cozy-sage rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
@@ -135,7 +133,6 @@
         </div>
     </div>
 
-    <!-- Main Workspace -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
 
         <!-- Roster Filter Header Bar -->
@@ -143,19 +140,18 @@
             <div class="flex items-center justify-between">
                 <!-- Status Filter Pills -->
                 <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 custom-scrollbar w-full">
-                    <button onclick="filterStatus('all')" id="filter-all" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap">All (<span id="count-all">0</span>)</button>
+                    <button onclick="filterStatus('all')" id="filter-all" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">All (<span id="count-all">0</span>)</button>
                     <button onclick="filterStatus('Incoming')" id="filter-incoming" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Incoming (<span id="count-incoming">0</span>)</button>
-                    <button onclick="filterStatus('Current')" id="filter-current" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Current (<span id="count-current">0</span>)</button>
+                    <button onclick="filterStatus('Current')" id="filter-current" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap">Current (<span id="count-current">0</span>)</button>
                     <button onclick="filterStatus('Former')" id="filter-former" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Former (<span id="count-former">0</span>)</button>
                 </div>
             </div>
         </div>
 
         <!-- Main Workspace Grid -->
-        <div id="mainDashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div id="mainDashboard" class="grid grid-cols-1 md:grid-cols-12 gap-6">
 
-            <!-- Roster List Sidebar -->
-            <div id="rosterSidebar" class="lg:col-span-4 space-y-3">
+            <div id="rosterSidebar" class="md:col-span-4 space-y-3">
                 <div class="flex items-center justify-between px-1">
                     <h2 class="text-base sm:text-lg font-bold text-cozy-darkText">Foster Roster</h2>
                     <span class="text-xs text-gray-400" id="rosterSubtext">Select a foster to view details</span>
@@ -165,10 +161,9 @@
                 </div>
             </div>
 
-            <!-- Detail Workspace (Hidden on mobile by default when viewing roster) -->
-            <div id="detailWorkspace" class="hidden lg:block lg:col-span-8">
+            <div id="detailWorkspace" class="md:col-span-8">
 
-                <!-- No Pet Selected View -->
+                <!-- Empty Selection State -->
                 <div id="noPetSelectedView" class="hidden bg-white rounded-3xl p-8 sm:p-12 text-center border border-dashed border-gray-300 shadow-sm">
                     <div class="w-16 sm:w-20 h-16 sm:h-20 bg-amber-50 text-cozy-sage rounded-full flex items-center justify-center mx-auto mb-4 text-2xl sm:text-3xl">
                         <i class="fa-solid fa-cat"></i>
@@ -180,17 +175,18 @@
                     </button>
                 </div>
 
-                <!-- Active Foster Workstation -->
+                <!-- Active Foster Detail View -->
                 <div id="petDetailWorkspace" class="space-y-4 sm:space-y-6">
 
-                    <!-- Prominent Header Navigation / Back Button -->
-                    <div class="flex items-center justify-between mb-2">
-                        <button onclick="showRosterView()" class="inline-flex items-center space-x-2 px-3.5 py-2 bg-white hover:bg-cozy-cream border border-amber-200 text-cozy-darkText rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition">
+                    <!-- Sticky Back to List Button on Mobile Header -->
+                    <div id="mobileBackButtonRow" class="sticky top-16 z-20 pt-1 pb-2 bg-cozy-bg/95 backdrop-blur-sm md:hidden">
+                        <button onclick="showRosterView()" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-4 py-2 bg-white hover:bg-cozy-cream border border-amber-200 text-cozy-darkText rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition">
                             <i class="fa-solid fa-arrow-left text-cozy-sage"></i>
                             <span>Back to Foster Roster</span>
                         </button>
                     </div>
 
+                    <!-- Pet Header Card -->
                     <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-amber-50 relative">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div class="flex items-start sm:items-center space-x-3 sm:space-x-4">
@@ -224,7 +220,7 @@
                             </div>
                         </div>
 
-                        <!-- Tab Bar Header Navigation -->
+                        <!-- Tab Header Buttons -->
                         <div class="flex border-b border-gray-200 mt-5 gap-4 sm:gap-6 text-xs sm:text-sm font-medium overflow-x-auto custom-scrollbar">
                             <button onclick="switchTab('dailyLog')" id="tab-dailyLog" class="pb-2.5 tab-active transition flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fa-solid fa-chart-line"></i> Daily Logs & Weight
@@ -241,7 +237,6 @@
                         </div>
                     </div>
 
-                    <!-- TAB 1: Daily Log & Weight Chart -->
                     <div id="pane-dailyLog" class="tab-pane space-y-4 sm:space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
                             <!-- Daily Entry Form -->
@@ -258,7 +253,7 @@
 
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Weight (Optional)</label>
+                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Weight</label>
                                             <input type="number" step="0.1" id="logWeight" placeholder="e.g. 450" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                         </div>
                                         <div>
@@ -267,6 +262,7 @@
                                                 <option value="g">Grams (g)</option>
                                                 <option value="oz">Ounces (oz)</option>
                                                 <option value="lbs">Pounds (lbs)</option>
+                                                <option value="kg">Kilograms (kg)</option>
                                             </select>
                                         </div>
                                     </div>
@@ -345,7 +341,6 @@
                         </div>
                     </div>
 
-                    <!-- TAB 2: Care Schedule -->
                     <div id="pane-schedule" class="tab-pane hidden space-y-4">
                         <div class="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-amber-50">
                             <div class="flex justify-between items-center gap-2 mb-4">
@@ -363,7 +358,6 @@
                         </div>
                     </div>
 
-                    <!-- TAB 3: Kitten Milestones -->
                     <div id="pane-milestones" class="tab-pane hidden space-y-4">
                         <div class="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-amber-50">
                             <div id="milestonesKittenHeader" class="flex justify-between items-center mb-4">
@@ -379,7 +373,6 @@
                         </div>
                     </div>
 
-                    <!-- TAB 4: Medical Records -->
                     <div id="pane-medical" class="tab-pane hidden space-y-4">
                         <div class="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-amber-50">
                             <h3 class="text-base sm:text-lg font-bold text-cozy-darkText mb-4">Medical Records</h3>
@@ -429,7 +422,6 @@
         </div>
     </main>
 
-    <!-- MODAL: Add / Edit Foster Pet -->
     <div id="petModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button onclick="closePetModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
@@ -459,14 +451,25 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Intake Date *</label>
+                    <input type="date" id="petIntake" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                </div>
+
+                <!-- Target Weight & Weight Unit fields -->
                 <div class="grid grid-cols-2 gap-2.5">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Intake Date *</label>
-                        <input type="date" id="petIntake" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Target Weight</label>
+                        <input type="number" step="0.1" id="petTargetWeight" placeholder="e.g. 900 or 9" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Target Weight</label>
-                        <input type="text" id="petTargetWeight" placeholder="e.g. 900 or 9 lbs" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Target Weight Unit</label>
+                        <select id="petTargetWeightUnit" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                            <option value="g">Grams (g)</option>
+                            <option value="oz">Ounces (oz)</option>
+                            <option value="lbs">Pounds (lbs)</option>
+                            <option value="kg">Kilograms (kg)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -479,7 +482,7 @@
                     </select>
                 </div>
 
-                <!-- Link Siblings / Littermates Field -->
+                <!-- Sibling / Littermates Field -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Link Siblings / Littermates / Bonded Pairs</label>
                     <div id="siblingsSelectionBox" class="bg-gray-50 border border-gray-200 rounded-xl p-2.5 max-h-32 overflow-y-auto space-y-1.5 custom-scrollbar text-xs">
@@ -487,7 +490,7 @@
                     <p class="text-[10px] text-gray-400 mt-1">Select other fosters in your roster to link as littermates or bonded pairs.</p>
                 </div>
 
-                <!-- Camera Roll Photo Upload Input -->
+                <!-- Photo Upload Input -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Upload Photo (from Camera Roll)</label>
                     <input type="file" id="petImageFileInput" accept="image/*" onchange="previewSelectedImage(event)" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cozy-cream file:text-cozy-darkText hover:file:bg-amber-100 cursor-pointer">
@@ -506,7 +509,6 @@
         </div>
     </div>
 
-    <!-- MODAL: Add Care Routine -->
     <div id="taskModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-xl relative">
             <button onclick="closeTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
@@ -538,7 +540,7 @@
     </div>
 
     <script>
-        // Firebase Config
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDqPjoCg0gYKmxBkF3-7eqYilmLdJqvGU8",
             authDomain: "house-motives.firebaseapp.com",
@@ -587,6 +589,7 @@
                 age: '4 Weeks',
                 intakeDate: '2026-09-10',
                 targetWeight: '900',
+                targetWeightUnit: 'g',
                 status: 'Current',
                 image: '',
                 siblings: ['foster-matcha'],
@@ -608,6 +611,7 @@
                 age: '4 Weeks',
                 intakeDate: '2026-09-10',
                 targetWeight: '900',
+                targetWeightUnit: 'g',
                 status: 'Current',
                 image: '',
                 siblings: ['foster-mochi'],
@@ -624,6 +628,8 @@
             resetLogTimeField();
             attachDynamicTimeListeners();
 
+            window.addEventListener('resize', handleViewportResize);
+
             // Listen for Auth State Changes
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -638,37 +644,37 @@
             });
         };
 
-        // Set or refresh log entry date-time picker
+        // Date-time input handling logic
         function resetLogTimeField() {
-            if (state.hasUserModifiedTime) return;
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('logDateTime').value = now.toISOString().slice(0, 16);
+            if (!state.hasUserModifiedTime) {
+                const now = new Date();
+                const offset = now.getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
+                const input = document.getElementById('logDateTime');
+                if (input) input.value = localISOTime;
+            }
         }
 
-        // Auto-refresh log time when user interacts with inputs (unless manually edited)
         function attachDynamicTimeListeners() {
             const formInputs = document.querySelectorAll('#dailyLogForm input, #dailyLogForm select, #dailyLogForm textarea');
             formInputs.forEach(input => {
-                input.addEventListener('focus', () => {
-                    if (!state.hasUserModifiedTime) {
+                if (input.id === 'logDateTime') {
+                    input.addEventListener('input', () => {
+                        state.hasUserModifiedTime = true;
+                    });
+                } else {
+                    input.addEventListener('focus', () => {
                         resetLogTimeField();
-                    }
-                });
-            });
-
-            document.getElementById('logDateTime').addEventListener('change', () => {
-                state.hasUserModifiedTime = true;
+                    });
+                }
             });
         }
 
         function handleGoogleSignIn() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then(result => {
-                showToast(`Welcome back, ${result.user.displayName}!`);
-            }).catch(error => {
-                console.error("Auth error:", error);
-                showToast("Sign in failed: " + error.message);
+            auth.signInWithPopup(provider).catch(error => {
+                console.error("Auth Error:", error);
+                showToast("Sign-in error. Try again.");
             });
         }
 
@@ -679,20 +685,39 @@
         }
 
         function updateUserUI(isLoggedIn) {
-            const authOverlay = document.getElementById('authOverlayScreen');
-            const signInBtn = document.getElementById('googleSignInBtn');
             const userPill = document.getElementById('userInfoPill');
+            const signInBtn = document.getElementById('googleSignInBtn');
+            const authOverlay = document.getElementById('authOverlayScreen');
 
             if (isLoggedIn && state.user) {
-                authOverlay.classList.add('hidden');
-                signInBtn.classList.add('hidden');
                 userPill.classList.remove('hidden');
+                signInBtn.classList.add('hidden');
+                authOverlay.classList.add('hidden');
                 document.getElementById('userName').innerText = state.user.displayName || state.user.email;
-                document.getElementById('userAvatar').src = state.user.photoURL || `https://placehold.co/100x100/84A59D/ffffff?text=U`;
+                document.getElementById('userAvatar').src = state.user.photoURL || 'https://placehold.co/100x100/84A59D/ffffff?text=U';
             } else {
-                authOverlay.classList.remove('hidden');
-                signInBtn.classList.remove('hidden');
                 userPill.classList.add('hidden');
+                signInBtn.classList.remove('hidden');
+                authOverlay.classList.remove('hidden');
+            }
+        }
+
+        function isDesktopScreen() {
+            return window.innerWidth >= 768;
+        }
+
+        function handleViewportResize() {
+            if (isDesktopScreen()) {
+                document.getElementById('rosterSidebar').classList.remove('hidden');
+                document.getElementById('detailWorkspace').classList.remove('hidden');
+            } else {
+                if (state.activePetId) {
+                    document.getElementById('rosterSidebar').classList.add('hidden');
+                    document.getElementById('detailWorkspace').classList.remove('hidden');
+                } else {
+                    document.getElementById('rosterSidebar').classList.remove('hidden');
+                    document.getElementById('detailWorkspace').classList.add('hidden');
+                }
             }
         }
 
@@ -750,7 +775,6 @@
             }, 3000);
         }
 
-        // Filter button click handler - returns user to the main list
         function filterStatus(status) {
             state.filterStatus = status;
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -771,15 +795,24 @@
             renderRoster();
         }
 
-        // Navigation helpers between detail & roster view
         function showRosterView() {
-            document.getElementById('rosterSidebar').classList.remove('hidden');
-            document.getElementById('detailWorkspace').classList.add('hidden');
+            if (isDesktopScreen()) {
+                document.getElementById('rosterSidebar').classList.remove('hidden');
+                document.getElementById('detailWorkspace').classList.remove('hidden');
+            } else {
+                document.getElementById('rosterSidebar').classList.remove('hidden');
+                document.getElementById('detailWorkspace').classList.add('hidden');
+            }
         }
 
         function showDetailView() {
-            document.getElementById('rosterSidebar').classList.add('hidden');
-            document.getElementById('detailWorkspace').classList.remove('hidden');
+            if (isDesktopScreen()) {
+                document.getElementById('rosterSidebar').classList.remove('hidden');
+                document.getElementById('detailWorkspace').classList.remove('hidden');
+            } else {
+                document.getElementById('rosterSidebar').classList.add('hidden');
+                document.getElementById('detailWorkspace').classList.remove('hidden');
+            }
         }
 
         function renderRoster() {
@@ -795,21 +828,6 @@
             document.getElementById('count-incoming').innerText = state.pets.filter(p => p.status === 'Incoming').length;
             document.getElementById('count-current').innerText = state.pets.filter(p => p.status === 'Current').length;
             document.getElementById('count-former').innerText = state.pets.filter(p => p.status === 'Former').length;
-
-            // Highlight current active filter button styling
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap";
-            });
-            const activeMap = {
-                'all': 'filter-all',
-                'Incoming': 'filter-incoming',
-                'Current': 'filter-current',
-                'Former': 'filter-former'
-            };
-            if (activeMap[state.filterStatus]) {
-                const el = document.getElementById(activeMap[state.filterStatus]);
-                if (el) el.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap";
-            }
 
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="p-6 text-center text-gray-400 bg-white rounded-2xl text-xs sm:text-sm">No fosters in this status.</div>`;
@@ -885,14 +903,16 @@
             document.getElementById('detailImg').src = pet.image || `https://placehold.co/150x150/84A59D/ffffff?text=${pet.name.charAt(0)}`;
             document.getElementById('detailBreedAge').innerText = `${pet.species || 'Kitten'} • ${pet.age || 'Age N/A'}`;
             document.getElementById('detailIntake').innerText = pet.intakeDate || 'N/A';
-            document.getElementById('detailTarget').innerText = pet.targetWeight ? `${pet.targetWeight}` : 'Not set';
+            
+            const targetWeightStr = pet.targetWeight ? `${pet.targetWeight} ${pet.targetWeightUnit || 'g'}` : 'Not set';
+            document.getElementById('detailTarget').innerText = targetWeightStr;
             document.getElementById('detailMicrochip').innerText = pet.medical?.microchip || 'N/A';
 
             const badge = document.getElementById('detailStatusBadge');
             badge.innerText = pet.status;
             badge.className = `px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getStatusBadgeClass(pet.status)}`;
 
-            // Hide or Show Kitten Milestones tab depending on species
+            // Hide Kitten Milestones tab for Adult Cats
             const milestonesTabBtn = document.getElementById('tab-milestones');
             if (pet.species === 'Cat') {
                 milestonesTabBtn.classList.add('hidden');
@@ -996,7 +1016,6 @@
             const ctx = document.getElementById('weightChart').getContext('2d');
             const logs = pet.logs || [];
 
-            // Filter out logs where weight was omitted
             const validWeightLogs = logs.filter(l => l.weight !== undefined && l.weight !== null && l.weight !== '');
 
             const labels = validWeightLogs.map(l => new Date(l.dateTime).toLocaleDateString([], { month: 'numeric', day: 'numeric' }));
@@ -1014,7 +1033,7 @@
                     labels: labels.length ? labels : ['No Weight Recorded'],
                     datasets: [
                         {
-                            label: `Weight (${validWeightLogs[0]?.unit || 'g'})`,
+                            label: `Weight (${validWeightLogs[0]?.unit || pet.targetWeightUnit || 'g'})`,
                             data: weights.length ? weights : [0],
                             borderColor: '#84A59D',
                             backgroundColor: 'rgba(132, 165, 157, 0.15)',
@@ -1025,7 +1044,7 @@
                             pointBackgroundColor: '#84A59D'
                         },
                         ...(targetVal ? [{
-                            label: 'Target Weight',
+                            label: `Target (${pet.targetWeightUnit || 'g'})`,
                             data: targetLine,
                             borderColor: '#F28482',
                             borderDash: [5, 5],
@@ -1292,6 +1311,7 @@
                 document.getElementById('petAge').value = pet.age || '';
                 document.getElementById('petIntake').value = pet.intakeDate || '';
                 document.getElementById('petTargetWeight').value = pet.targetWeight || '';
+                document.getElementById('petTargetWeightUnit').value = pet.targetWeightUnit || 'g';
                 document.getElementById('petStatus').value = pet.status || 'Current';
 
                 currentSiblings = pet.siblings || [];
@@ -1305,9 +1325,9 @@
                 document.getElementById('petModalTitle').innerText = "Add New Foster Pet";
                 document.getElementById('petFormId').value = '';
                 document.getElementById('petIntake').value = new Date().toISOString().split('T')[0];
+                document.getElementById('petTargetWeightUnit').value = 'g';
             }
 
-            // Populate Sibling Picker Checkboxes
             const eligibleSiblings = state.pets.filter(p => p.id !== currentPetId);
             if (eligibleSiblings.length === 0) {
                 siblingsBox.innerHTML = `<p class="text-gray-400 text-[11px]">No other fosters available to link.</p>`;
@@ -1343,7 +1363,6 @@
             const selectedSiblingIds = Array.from(siblingCheckboxes).map(cb => cb.value);
 
             if (id) {
-                // Edit existing
                 const pet = state.pets.find(p => p.id === id);
                 if (pet) {
                     pet.name = document.getElementById('petName').value;
@@ -1351,6 +1370,7 @@
                     pet.age = document.getElementById('petAge').value;
                     pet.intakeDate = document.getElementById('petIntake').value;
                     pet.targetWeight = document.getElementById('petTargetWeight').value;
+                    pet.targetWeightUnit = document.getElementById('petTargetWeightUnit').value;
                     pet.status = document.getElementById('petStatus').value;
                     pet.siblings = selectedSiblingIds;
                     if (state.tempBase64Image) {
@@ -1361,7 +1381,6 @@
                 syncTwoWaySiblingLinks(id, selectedSiblingIds);
                 showToast("Profile updated!");
             } else {
-                // Add new
                 const newId = 'foster-' + Date.now();
                 const speciesVal = document.getElementById('petSpecies').value;
                 const newPet = {
@@ -1371,6 +1390,7 @@
                     age: document.getElementById('petAge').value,
                     intakeDate: document.getElementById('petIntake').value,
                     targetWeight: document.getElementById('petTargetWeight').value,
+                    targetWeightUnit: document.getElementById('petTargetWeightUnit').value,
                     status: document.getElementById('petStatus').value,
                     siblings: selectedSiblingIds,
                     image: state.tempBase64Image || '',
@@ -1417,7 +1437,6 @@
             if (confirm(`Are you sure you want to delete the profile for "${pet.name}"?`)) {
                 state.pets = state.pets.filter(p => p.id !== state.activePetId);
 
-                // Clean up references in other siblings
                 state.pets.forEach(p => {
                     if (p.siblings) p.siblings = p.siblings.filter(s => s !== pet.id);
                 });
