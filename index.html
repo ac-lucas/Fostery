@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fostery - Foster Pet Tracker</title>
-
+    
     <!-- Inline SVG Favicon & Apple Touch Icon (Cute Cat Whiskers / Nose Icon) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FAF7F2'/%3E%3Ccircle cx='50' cy='50' r='42' fill='%2384A59D'/%3E%3Cpath d='M43 45 C43 41, 57 41, 57 45 C57 52, 43 52, 43 45 Z' fill='%23F28482'/%3E%3Cpath d='M50 49 L50 56 C45 61, 38 59, 36 55 M50 56 C55 61, 62 59, 64 55' stroke='%232B2D42' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M22 40 L38 44 M18 49 L37 49 M22 58 L38 53 M78 40 L62 44 M82 49 L63 49 M78 58 L62 53' stroke='%23FFFFFF' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FAF7F2'/%3E%3Ccircle cx='50' cy='50' r='42' fill='%2384A59D'/%3E%3Cpath d='M43 45 C43 41, 57 41, 57 45 C57 52, 43 52, 43 45 Z' fill='%23F28482'/%3E%3Cpath d='M50 49 L50 56 C45 61, 38 59, 36 55 M50 56 C55 61, 62 59, 64 55' stroke='%232B2D42' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M22 40 L38 44 M18 49 L37 49 M22 58 L38 53 M78 40 L62 44 M82 49 L63 49 M78 58 L62 53' stroke='%23FFFFFF' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -183,23 +183,12 @@
                 <!-- Active Foster Detail View -->
                 <div id="petDetailWorkspace" class="space-y-4 sm:space-y-6">
 
-                    <!-- Sticky Back to List Button & Active Pet Name on Mobile Header -->
-                    <div id="mobileBackButtonRow" class="sticky top-16 z-20 pt-1 pb-2 bg-cozy-bg/95 backdrop-blur-sm md:hidden border-b border-amber-100/60 mb-3">
-                        <div class="flex items-center justify-between gap-2">
-                            <button onclick="showRosterView()" class="inline-flex items-center justify-center space-x-1.5 px-3 py-2 bg-white hover:bg-cozy-cream border border-amber-200 text-cozy-darkText rounded-xl text-xs font-semibold shadow-sm transition flex-shrink-0">
-                                <i class="fa-solid fa-arrow-left text-cozy-sage"></i>
-                                <span>Roster</span>
-                            </button>
-
-                            <!-- Active Foster Mobile Indicator -->
-                            <div id="mobileActivePetIndicator" class="flex items-center space-x-2 bg-white border border-amber-100 px-2.5 py-1 rounded-2xl shadow-sm min-w-0">
-                                <img id="mobileHeaderPetImg" src="" alt="Active Foster" class="w-6 h-6 rounded-full object-cover border border-cozy-sage flex-shrink-0">
-                                <div class="min-w-0">
-                                    <span id="mobileHeaderPetName" class="font-bold text-xs text-cozy-darkText truncate block">---</span>
-                                </div>
-                                <span id="mobileHeaderPetSpecies" class="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-medium flex-shrink-0">---</span>
-                            </div>
-                        </div>
+                    <!-- Sticky Back to List Button on Mobile Header -->
+                    <div id="mobileBackButtonRow" class="sticky top-16 z-20 pt-1 pb-2 bg-cozy-bg/95 backdrop-blur-sm md:hidden">
+                        <button onclick="showRosterView()" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-4 py-2 bg-white hover:bg-cozy-cream border border-amber-200 text-cozy-darkText rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition">
+                            <i class="fa-solid fa-arrow-left text-cozy-sage"></i>
+                            <span>Back to Foster Roster</span>
+                        </button>
                     </div>
 
                     <!-- Pet Header Card -->
@@ -856,6 +845,9 @@
                 const weightDisplay = latestWeightLog ? `${latestWeightLog.weight} ${latestWeightLog.unit || 'g'}` : 'No logs';
 
                 const card = document.createElement('div');
+                card.onclick = () => {
+                    selectActivePet(pet.id);
+                };
                 card.className = `p-3.5 rounded-2xl cursor-pointer transition flex items-center justify-between ${
                     isSelected ? 'bg-cozy-cream border-2 border-cozy-sage shadow-sm' : 'bg-white hover:bg-amber-50/50 border border-amber-50'
                 }`;
@@ -912,21 +904,11 @@
             detailView.classList.remove('hidden');
             noPetView.classList.add('hidden');
 
-            const petAvatar = pet.image || `https://placehold.co/150x150/84A59D/ffffff?text=${pet.name.charAt(0)}`;
-
             document.getElementById('detailName').innerText = pet.name;
-            document.getElementById('detailImg').src = petAvatar;
+            document.getElementById('detailImg').src = pet.image || `https://placehold.co/150x150/84A59D/ffffff?text=${pet.name.charAt(0)}`;
             document.getElementById('detailBreedAge').innerText = `${pet.species || 'Kitten'} • ${pet.age || 'Age N/A'}`;
             document.getElementById('detailIntake').innerText = pet.intakeDate || 'N/A';
             
-            // Populate Mobile Floating Header Bar details
-            const mobileHeaderImg = document.getElementById('mobileHeaderPetImg');
-            const mobileHeaderName = document.getElementById('mobileHeaderPetName');
-            const mobileHeaderSpecies = document.getElementById('mobileHeaderPetSpecies');
-            if (mobileHeaderImg) mobileHeaderImg.src = petAvatar;
-            if (mobileHeaderName) mobileHeaderName.innerText = pet.name;
-            if (mobileHeaderSpecies) mobileHeaderSpecies.innerText = pet.species || 'Kitten';
-
             const targetWeightStr = pet.targetWeight ? `${pet.targetWeight} ${pet.targetWeightUnit || 'g'}` : 'Not set';
             document.getElementById('detailTarget').innerText = targetWeightStr;
             document.getElementById('detailMicrochip').innerText = pet.medical?.microchip || 'N/A';
