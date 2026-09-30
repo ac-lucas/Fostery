@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foster Care Companion - Pet & Kitten Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts (Inter & Fredoka for cozy pet feel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        },
+                        cozy: {
+                            bg: '#FAF7F2',
+                            card: '#FFFFFF',
+                            sage: '#84A59D',
+                            coral: '#F28482',
+                            cream: '#F7EDE2',
+                            text: '#4A4E69',
+                            darkText: '#2B2D42'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Fredoka', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #FAF7F2;
+            color: #2B2D42;
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, .font-display {
+            font-family: 'Fredoka', cursive;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F7EDE2;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #84A59D;
+            border-radius: 8px;
+        }
+        .tab-active {
+            border-bottom: 3px solid #84A59D;
+            color: #84A59D;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white border-b border-amber-100 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-cozy-sage text-white p-2.5 rounded-2xl shadow-sm">
+                        <i class="fa-solid me-0 fa-paw text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-display text-xl sm:text-2xl font-bold text-cozy-darkText tracking-wide">Foster Care <span class="text-cozy-sage">Companion</span></span>
+                        <p class="text-xs text-gray-500 hidden sm:block">Track, nurture, and celebrate your foster journey</p>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex items-center space-x-3">
+                    <button id="addPetBtn" onclick="openPetModal()" class="bg-cozy-sage hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>New Foster</span>
+                    </button>
+                    <button onclick="exportData()" title="Export Data JSON" class="p-2 text-gray-600 hover:text-cozy-sage hover:bg-gray-100 rounded-xl transition">
+                        <i class="fa-solid fa-file-export"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Top Roster & Filter Bar -->
+        <div class="mb-6 bg-white p-4 rounded-2xl shadow-sm border border-amber-50">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- Roster Filters -->
+                <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 custom-scrollbar">
+                    <button onclick="filterStatus('all')" id="filter-all" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-cozy-sage text-white">All Fosters (<span id="count-all">0</span>)</button>
+                    <button onclick="filterStatus('Active Foster')" id="filter-active" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">Active (<span id="count-active">0</span>)</button>
+                    <button onclick="filterStatus('Ready for Adoption')" id="filter-ready" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">Ready (<span id="count-ready">0</span>)</button>
+                    <button onclick="filterStatus('Adopted')" id="filter-adopted" class="filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">Adopted (<span id="count-adopted">0</span>)</button>
+                </div>
+
+                <!-- Foster Selector Dropdown (for active profile focus) -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Viewing:</label>
+                    <select id="activePetSelect" onchange="selectActivePet(this.value)" class="bg-cozy-cream text-cozy-darkText border-none text-sm font-medium rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none cursor-pointer">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main View Split Panel -->
+        <div id="mainDashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Sidebar / Pet Selector Card Stack (4 Cols) -->
+            <div class="lg:col-span-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-cozy-darkText">Foster Roster</h2>
+                    <span class="text-xs text-gray-500">Select a profile to log details</span>
+                </div>
+
+                <div id="rosterCardsList" class="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar pr-1">
+                    <!-- Roster items populated via JS -->
+                </div>
+            </div>
+
+            <!-- Right Detail Workspace (8 Cols) -->
+            <div class="lg:col-span-8">
+                <div id="noPetSelectedView" class="hidden bg-white rounded-3xl p-12 text-center border border-dashed border-gray-300 shadow-sm">
+                    <div class="w-20 h-20 bg-amber-50 text-cozy-sage rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                        <i class="fa-solid fa-cat"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-700 mb-2">No Foster Pet Selected</h3>
+                    <p class="text-gray-500 text-sm max-w-md mx-auto mb-6">Select a foster pet from the roster list on the left, or add a new kitten or pet profile to start tracking!</p>
+                    <button onclick="openPetModal()" class="bg-cozy-sage text-white px-5 py-2.5 rounded-xl font-medium shadow hover:bg-teal-700 transition">
+                        <i class="fa-solid fa-plus mr-2"></i>Add First Foster
+                    </button>
+                </div>
+
+                <div id="petDetailWorkspace" class="space-y-6">
+
+                    <!-- Active Pet Card Header -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-50 relative overflow-hidden">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="flex items-center space-x-4">
+                                <img id="detailImg" src="" alt="Pet Avatar" class="w-20 h-20 rounded-2xl object-cover border-2 border-cozy-sage shadow-sm">
+                                <div>
+                                    <div class="flex items-center space-x-3">
+                                        <h2 id="detailName" class="text-2xl font-bold text-cozy-darkText">---</h2>
+                                        <span id="detailStatusBadge" class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Active</span>
+                                    </div>
+                                    <p id="detailBreedAge" class="text-sm text-gray-500 mt-1">Domestic Shorthair • ~4 Weeks</p>
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mt-2">
+                                        <span><i class="fa-solid fa-calendar-check text-cozy-sage mr-1"></i>Intake: <strong id="detailIntake">---</strong></span>
+                                        <span><i class="fa-solid fa-bullseye text-cozy-coral mr-1"></i>Target: <strong id="detailTarget">---</strong></span>
+                                        <span><i class="fa-solid fa-microchip text-indigo-400 mr-1"></i>Chip #: <strong id="detailMicrochip">---</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-2 self-end sm:self-center">
+                                <button onclick="editCurrentPet()" class="p-2.5 bg-gray-100 hover:bg-cozy-cream text-gray-700 rounded-xl text-sm transition" title="Edit Profile">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="deleteCurrentPet()" class="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm transition" title="Delete Profile">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tab Nav for Details -->
+                        <div class="flex border-b border-gray-200 mt-6 gap-6 text-sm font-medium">
+                            <button onclick="switchTab('dailyLog')" id="tab-dailyLog" class="pb-3 tab-active transition flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line"></i> Daily Logs & Weight
+                            </button>
+                            <button onclick="switchTab('schedule')" id="tab-schedule" class="pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-days"></i> Care & Med Schedule
+                            </button>
+                            <button onclick="switchTab('milestones')" id="tab-milestones" class="pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2">
+                                <i class="fa-solid fa-award"></i> Milestones
+                            </button>
+                            <button onclick="switchTab('medical')" id="tab-medical" class="pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2">
+                                <i class="fa-solid fa-notes-medical"></i> Medical Notes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: Daily Log & Weight Tracker -->
+                    <div id="pane-dailyLog" class="tab-pane space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                            <!-- Quick Daily Entry Form (5 cols) -->
+                            <div class="md:col-span-5 bg-white p-5 rounded-3xl shadow-sm border border-amber-50">
+                                <h3 class="text-base font-bold text-cozy-darkText mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-plus-circle text-cozy-sage"></i> Log Today's Entry
+                                </h3>
+
+                                <form id="dailyLogForm" onsubmit="saveDailyLog(event)" class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Date & Time</label>
+                                        <input type="datetime-local" id="logDateTime" required class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Weight</label>
+                                            <input type="number" step="0.1" id="logWeight" placeholder="e.g. 450" required class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Unit</label>
+                                            <select id="logWeightUnit" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                                <option value="g">Grams (g)</option>
+                                                <option value="oz">Ounces (oz)</option>
+                                                <option value="lbs">Pounds (lbs)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Food Intake</label>
+                                        <input type="text" id="logFood" placeholder="e.g. 15ml Formula / 20g Wet" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Bowel / Litter</label>
+                                            <select id="logBowel" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                                <option value="Normal">Normal</option>
+                                                <option value="Soft / Loose">Soft / Loose</option>
+                                                <option value="Diarrhea">Diarrhea</option>
+                                                <option value="None Observed">None Observed</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Demeanor</label>
+                                            <select id="logDemeanor" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                                <option value="Playful & Active">Playful & Active</option>
+                                                <option value="Calm & Content">Calm & Content</option>
+                                                <option value="Sleepy / Lethargic">Sleepy / Lethargic</option>
+                                                <option value="Vocal / Fussy">Vocal / Fussy</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
+                                        <textarea id="logNotes" rows="2" placeholder="Any special observations..." class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none"></textarea>
+                                    </div>
+
+                                    <button type="submit" class="w-full bg-cozy-sage hover:bg-teal-700 text-white font-medium py-2 rounded-xl text-sm transition shadow-sm">
+                                        Save Daily Entry
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Weight Trend Chart (7 cols) -->
+                            <div class="md:col-span-7 bg-white p-5 rounded-3xl shadow-sm border border-amber-50 flex flex-col justify-between">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-base font-bold text-cozy-darkText flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-area text-cozy-coral"></i> Growth & Weight Trend
+                                    </h3>
+                                    <span class="text-xs text-gray-400">Target Line shown</span>
+                                </div>
+                                <div class="relative w-full h-64">
+                                    <canvas id="weightChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Daily Log History Table -->
+                        <div class="bg-white p-5 rounded-3xl shadow-sm border border-amber-50">
+                            <h3 class="text-base font-bold text-cozy-darkText mb-4">Past Log History</h3>
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                                    <thead>
+                                        <tr class="bg-cozy-cream/60 text-gray-600 border-b border-amber-100">
+                                            <th class="p-3 rounded-l-xl">Date & Time</th>
+                                            <th class="p-3">Weight</th>
+                                            <th class="p-3">Food Intake</th>
+                                            <th class="p-3">Litter Box</th>
+                                            <th class="p-3">Demeanor</th>
+                                            <th class="p-3">Notes</th>
+                                            <th class="p-3 rounded-r-xl text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logHistoryTable" class="divide-y divide-gray-100">
+                                        <!-- Rows inserted via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Care & Medication Schedule -->
+                    <div id="pane-schedule" class="tab-pane hidden space-y-6">
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-amber-50">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+                                <div>
+                                    <h3 class="text-lg font-bold text-cozy-darkText">Daily Care & Medication Checklist</h3>
+                                    <p class="text-xs text-gray-500">Track feeding rounds, medications, and routine care</p>
+                                </div>
+                                <button onclick="openAddTaskModal()" class="bg-cozy-sage text-white text-xs px-3.5 py-2 rounded-xl font-medium hover:bg-teal-700 transition">
+                                    <i class="fa-solid fa-plus mr-1"></i> Add Care Routine
+                                </button>
+                            </div>
+
+                            <div id="scheduleTaskList" class="space-y-3">
+                                <!-- Tasks generated via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: Milestone Checklist -->
+                    <div id="pane-milestones" class="tab-pane hidden space-y-6">
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-amber-50">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 class="text-lg font-bold text-cozy-darkText">Developmental & Behavioral Milestones</h3>
+                                    <p class="text-xs text-gray-500">Celebrate each milestone along your foster's growth journey!</p>
+                                </div>
+                                <span id="milestoneProgressText" class="text-xs font-bold text-cozy-sage bg-teal-50 px-3 py-1 rounded-full">0/0 Completed</span>
+                            </div>
+
+                            <div id="milestonesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Milestones loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: Medical History -->
+                    <div id="pane-medical" class="tab-pane hidden space-y-6">
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-amber-50">
+                            <h3 class="text-lg font-bold text-cozy-darkText mb-4">Medical & Vet Records</h3>
+
+                            <form id="medicalForm" onsubmit="saveMedicalNotes(event)" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Spay / Neuter Status</label>
+                                        <select id="medSpayStatus" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                                            <option value="Not Intact (Spayed/Neutered)">Spayed / Neutered</option>
+                                            <option value="Intact (Pending)">Intact (Pending)</option>
+                                            <option value="Scheduled">Surgery Scheduled</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Microchip Number</label>
+                                        <input type="text" id="medMicrochip" placeholder="e.g. 985141002391203" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Vaccinations Record</label>
+                                    <textarea id="medVaccines" rows="2" placeholder="e.g., FVRCP Dose 1: 09/10, FVRCP Dose 2: 10/01, Rabies: Pending" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Deworming & Parasite Treatments</label>
+                                    <textarea id="medDeworming" rows="2" placeholder="e.g., Pyrantel 0.4ml given 09/12, Revolution applied 09/20" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Active / Ongoing Medications & Health Notes</label>
+                                    <textarea id="medNotes" rows="3" placeholder="e.g., Eye drops twice daily for upper respiratory infection until Friday" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage"></textarea>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button type="submit" class="bg-cozy-sage hover:bg-teal-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition shadow-sm">
+                                        Update Medical Info
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: Add / Edit Pet -->
+    <div id="petModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closePetModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 id="petModalTitle" class="text-xl font-bold text-cozy-darkText mb-4">Add New Foster Pet</h3>
+
+            <form id="petForm" onsubmit="handlePetFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="petFormId">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Pet Name *</label>
+                    <input type="text" id="petName" required placeholder="e.g. Barnaby" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Species / Breed</label>
+                        <input type="text" id="petBreed" placeholder="e.g. Kitten / Tabby" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Estimated Age</label>
+                        <input type="text" id="petAge" placeholder="e.g. 3 Weeks" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Intake Date *</label>
+                        <input type="date" id="petIntake" required class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Target Weight (g/lbs)</label>
+                        <input type="text" id="petTargetWeight" placeholder="e.g. 900g or 2lbs" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Foster Status</label>
+                    <select id="petStatus" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <option value="Active Foster">Active Foster</option>
+                        <option value="Incoming">Incoming</option>
+                        <option value="Ready for Adoption">Ready for Adoption</option>
+                        <option value="Adopted">Adopted</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Image URL / Preset Avatar</label>
+                    <input type="text" id="petImage" placeholder="https://... or leave blank for default avatar" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                </div>
+
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closePetModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-cozy-sage hover:bg-teal-700 text-white rounded-xl text-sm font-medium shadow-sm">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Add Routine Task -->
+    <div id="taskModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl relative">
+            <button onclick="closeTaskModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-xl font-bold text-cozy-darkText mb-4">Add Routine Care Item</h3>
+
+            <form id="taskForm" onsubmit="handleTaskFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Task Description *</label>
+                    <input type="text" id="taskTitle" required placeholder="e.g. Give Eye Drops / Bottle Feeding" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Scheduled Time / Frequency</label>
+                    <input type="text" id="taskTime" placeholder="e.g. 8:00 AM & 8:00 PM" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-cozy-sage">
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-cozy-sage text-white rounded-xl text-sm font-medium">Add Routine</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast Box -->
+    <div id="toastBox" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-cozy-darkText text-white px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-3 text-sm">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-cozy-sage"></i>
+        <span id="toastMsg">Action saved successfully!</span>
+    </div>
+
+    <script>
+        // State Store
+        let state = {
+            pets: [],
+            activePetId: null,
+            filterStatus: 'all',
+            activeTab: 'dailyLog'
+        };
+
+        let weightChartInstance = null;
+
+        // Default milestones template
+        const DEFAULT_MILESTONES = [
+            { id: 'm1', title: 'Eyes Completely Opened', category: 'Physical', done: false, dateDone: '' },
+            { id: 'm2', title: 'Ears Unfolded & Hearing', category: 'Physical', done: false, dateDone: '' },
+            { id: 'm3', title: 'First Steps / Wobbly Walking', category: 'Motor', done: false, dateDone: '' },
+            { id: 'm4', title: 'First Wet Food / Weaning Started', category: 'Diet', done: false, dateDone: '' },
+            { id: 'm5', title: 'Litter Box Trained', category: 'Behavior', done: false, dateDone: '' },
+            { id: 'm6', title: 'Self-Grooming Observed', category: 'Behavior', done: false, dateDone: '' },
+            { id: 'm7', title: 'First Bath Completed', category: 'Care', done: false, dateDone: '' },
+            { id: 'm8', title: 'Socialized with Humans / Purring', category: 'Behavior', done: false, dateDone: '' },
+            { id: 'm9', title: 'Reached Target Adoption Weight', category: 'Milestone', done: false, dateDone: '' }
+        ];
+
+        // Seed Initial Mock Data if local storage empty
+        const SEED_PETS = [
+            {
+                id: 'foster-1',
+                name: 'Mochi',
+                breed: 'Kitten - Domestic Shorthair',
+                age: '4 Weeks',
+                intakeDate: '2026-09-10',
+                targetWeight: '900',
+                status: 'Active Foster',
+                image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=300&q=80',
+                logs: [
+                    { id: 'l1', dateTime: '2026-09-27T08:00', weight: 380, unit: 'g', food: '15ml KMR', bowel: 'Normal', demeanor: 'Playful & Active', notes: 'Very vocal for breakfast' },
+                    { id: 'l2', dateTime: '2026-09-28T08:00', weight: 410, unit: 'g', food: '18ml KMR + Wet Gruel', bowel: 'Normal', demeanor: 'Playful & Active', notes: 'Licking gruel off dish!' },
+                    { id: 'l3', dateTime: '2026-09-29T08:00', weight: 435, unit: 'g', food: '20ml Gruel', bowel: 'Normal', demeanor: 'Calm & Content', notes: 'Gained steadily' }
+                ],
+                tasks: [
+                    { id: 't1', title: 'Morning Feeding & Weigh-in', time: '8:00 AM', done: true },
+                    { id: 't2', title: 'Eye Drops (URI)', time: '12:00 PM', done: false },
+                    { id: 't3', title: 'Evening Feeding & Bath Check', time: '8:00 PM', done: false }
+                ],
+                milestones: JSON.parse(JSON.stringify(DEFAULT_MILESTONES)).map((m, idx) => {
+                    if (idx < 3) { m.done = true; m.dateDone = '2026-09-15'; }
+                    return m;
+                }),
+                medical: {
+                    spayStatus: 'Intact (Pending)',
+                    microchip: '985141002998112',
+                    vaccines: 'FVRCP #1 given on 09/20.',
+                    deworming: 'Pyrantel 0.4ml given 09/12.',
+                    notes: 'Mild eye discharge clearing up with terramycin drops.'
+                }
+            }
+        ];
+
+        window.onload = function() {
+            loadStorage();
+            if (state.pets.length > 0 && !state.activePetId) {
+                state.activePetId = state.pets[0].id;
+            }
+            // Set default datetime picker to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('logDateTime').value = now.toISOString().slice(0,16);
+
+            renderRoster();
+            renderActivePetDetail();
+        };
+
+        function loadStorage() {
+            const data = localStorage.getItem('foster_care_data');
+            if (data) {
+                try {
+                    state.pets = JSON.parse(data);
+                } catch(e) {
+                    state.pets = SEED_PETS;
+                }
+            } else {
+                state.pets = SEED_PETS;
+                saveStorage();
+            }
+        }
+
+        function saveStorage() {
+            localStorage.setItem('foster_care_data', JSON.stringify(state.pets));
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastBox');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Filter Logic
+        function filterStatus(status) {
+            state.filterStatus = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200";
+            });
+            const activeMap = {
+                'all': 'filter-all',
+                'Active Foster': 'filter-active',
+                'Ready for Adoption': 'filter-ready',
+                'Adopted': 'filter-adopted'
+            };
+            if(activeMap[status]) {
+                const el = document.getElementById(activeMap[status]);
+                if(el) el.className = "filter-btn px-4 py-1.5 rounded-xl text-sm font-medium bg-cozy-sage text-white";
+            }
+            renderRoster();
+        }
+
+        function renderRoster() {
+            const container = document.getElementById('rosterCardsList');
+            const selectDropdown = document.getElementById('activePetSelect');
+            container.innerHTML = '';
+            selectDropdown.innerHTML = '';
+
+            let filtered = state.pets;
+            if (state.filterStatus !== 'all') {
+                filtered = state.pets.filter(p => p.status === state.filterStatus);
+            }
+
+            // Update Counts
+            document.getElementById('count-all').innerText = state.pets.length;
+            document.getElementById('count-active').innerText = state.pets.filter(p => p.status === 'Active Foster').length;
+            document.getElementById('count-ready').innerText = state.pets.filter(p => p.status === 'Ready for Adoption').length;
+            document.getElementById('count-adopted').innerText = state.pets.filter(p => p.status === 'Adopted').length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-gray-400 bg-white rounded-2xl text-sm">No pets found in this view.</div>`;
+            }
+
+            state.pets.forEach(pet => {
+                const opt = document.createElement('option');
+                opt.value = pet.id;
+                opt.innerText = `${pet.name} (${pet.status})`;
+                if (pet.id === state.activePetId) opt.selected = true;
+                selectDropdown.appendChild(opt);
+            });
+
+            filtered.forEach(pet => {
+                const isSelected = pet.id === state.activePetId;
+                const latestLog = pet.logs && pet.logs.length > 0 ? pet.logs[pet.logs.length - 1] : null;
+                const weightDisplay = latestLog ? `${latestLog.weight}${latestLog.unit}` : 'No logs';
+
+                const card = document.createElement('div');
+                card.onclick = () => selectActivePet(pet.id);
+                card.className = `p-3.5 rounded-2xl cursor-pointer transition flex items-center justify-between ${
+                    isSelected ? 'bg-cozy-cream border-2 border-cozy-sage shadow-sm' : 'bg-white hover:bg-amber-50/50 border border-amber-50'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${pet.image || 'https://placehold.co/100x100/84A59D/ffffff?text=' + pet.name.charAt(0)}"
+                             alt="${pet.name}" class="w-12 h-12 rounded-xl object-cover border border-amber-100">
+                        <div>
+                            <h4 class="font-bold text-cozy-darkText text-sm">${pet.name}</h4>
+                            <p class="text-xs text-gray-500">${pet.breed || 'Pet'}</p>
+                            <span class="inline-block text-[10px] px-2 py-0.5 mt-1 rounded-full ${getStatusBadgeClass(pet.status)}">
+                                ${pet.status}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-gray-400 block">Latest Weight</span>
+                        <span class="text-sm font-bold text-cozy-sage">${weightDisplay}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Active Foster': return 'bg-emerald-100 text-emerald-800';
+                case 'Ready for Adoption': return 'bg-amber-100 text-amber-800';
+                case 'Adopted': return 'bg-indigo-100 text-indigo-800';
+                default: return 'bg-gray-100 text-gray-700';
+            }
+        }
+
+        function selectActivePet(id) {
+            state.activePetId = id;
+            renderRoster();
+            renderActivePetDetail();
+        }
+
+        function renderActivePetDetail() {
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            const detailView = document.getElementById('petDetailWorkspace');
+            const noPetView = document.getElementById('noPetSelectedView');
+
+            if (!pet) {
+                detailView.classList.add('hidden');
+                noPetView.classList.remove('hidden');
+                return;
+            }
+
+            detailView.classList.remove('hidden');
+            noPetView.classList.add('hidden');
+
+            // Header elements
+            document.getElementById('detailName').innerText = pet.name;
+            document.getElementById('detailImg').src = pet.image || `https://placehold.co/150x150/84A59D/ffffff?text=${pet.name.charAt(0)}`;
+            document.getElementById('detailBreedAge').innerText = `${pet.breed || 'Foster Pet'} • ${pet.age || 'Age N/A'}`;
+            document.getElementById('detailIntake').innerText = pet.intakeDate || 'N/A';
+            document.getElementById('detailTarget').innerText = pet.targetWeight ? `${pet.targetWeight}` : 'Not set';
+            document.getElementById('detailMicrochip').innerText = pet.medical?.microchip || 'N/A';
+
+            const badge = document.getElementById('detailStatusBadge');
+            badge.innerText = pet.status;
+            badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(pet.status)}`;
+
+            // Render current active tab content
+            renderTabContent();
+        }
+
+        function switchTab(tabName) {
+            state.activeTab = tabName;
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.className = "pb-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2";
+            });
+
+            document.getElementById(`pane-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "pb-3 tab-active transition flex items-center gap-2";
+
+            renderTabContent();
+        }
+
+        function renderTabContent() {
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+
+            if (state.activeTab === 'dailyLog') {
+                renderDailyLogsAndChart(pet);
+            } else if (state.activeTab === 'schedule') {
+                renderSchedule(pet);
+            } else if (state.activeTab === 'milestones') {
+                renderMilestones(pet);
+            } else if (state.activeTab === 'medical') {
+                renderMedical(pet);
+            }
+        }
+
+        function renderDailyLogsAndChart(pet) {
+            const tbody = document.getElementById('logHistoryTable');
+            tbody.innerHTML = '';
+
+            const logs = pet.logs || [];
+
+            if (logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">No daily logs recorded yet. Add your first weight entry above!</td></tr>`;
+            } else {
+                [...logs].reverse().forEach(log => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-amber-50/40 transition";
+                    const formattedDate = new Date(log.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+                    tr.innerHTML = `
+                        <td class="p-3 font-medium text-gray-700">${formattedDate}</td>
+                        <td class="p-3 font-bold text-cozy-sage">${log.weight} ${log.unit}</td>
+                        <td class="p-3 text-gray-600">${log.food || '-'}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-xs">${log.bowel || 'Normal'}</span></td>
+                        <td class="p-3 text-gray-600">${log.demeanor || '-'}</td>
+                        <td class="p-3 text-gray-500 max-w-xs truncate">${log.notes || '-'}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="deleteDailyLog('${log.id}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            renderChart(pet);
+        }
+
+        function renderChart(pet) {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            const logs = pet.logs || [];
+
+            const labels = logs.map(l => new Date(l.dateTime).toLocaleDateString([], { month: 'numeric', day: 'numeric' }));
+            const weights = logs.map(l => l.weight);
+            const targetVal = parseFloat(pet.targetWeight) || null;
+            const targetLine = targetVal ? logs.map(() => targetVal) : [];
+
+            if (weightChartInstance) {
+                weightChartInstance.destroy();
+            }
+
+            weightChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['No Data'],
+                    datasets: [
+                        {
+                            label: `Weight (${logs[0]?.unit || 'g'})`,
+                            data: weights.length ? weights : [0],
+                            borderColor: '#84A59D',
+                            backgroundColor: 'rgba(132, 165, 157, 0.15)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#84A59D'
+                        },
+                        ...(targetVal ? [{
+                            label: 'Target Weight',
+                            data: targetLine,
+                            borderColor: '#F28482',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        }] : [])
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function saveDailyLog(e) {
+            e.preventDefault();
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+
+            if (!pet.logs) pet.logs = [];
+
+            const newLog = {
+                id: 'log-' + Date.now(),
+                dateTime: document.getElementById('logDateTime').value,
+                weight: parseFloat(document.getElementById('logWeight').value),
+                unit: document.getElementById('logWeightUnit').value,
+                food: document.getElementById('logFood').value,
+                bowel: document.getElementById('logBowel').value,
+                demeanor: document.getElementById('logDemeanor').value,
+                notes: document.getElementById('logNotes').value
+            };
+
+            pet.logs.push(newLog);
+            saveStorage();
+            showToast("Daily log added!");
+
+            // Reset notes & food
+            document.getElementById('logFood').value = '';
+            document.getElementById('logNotes').value = '';
+
+            renderRoster();
+            renderActivePetDetail();
+        }
+
+        function deleteDailyLog(logId) {
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+
+            pet.logs = pet.logs.filter(l => l.id !== logId);
+            saveStorage();
+            showToast("Log entry deleted.");
+            renderRoster();
+            renderActivePetDetail();
+        }
+
+        function renderSchedule(pet) {
+            const container = document.getElementById('scheduleTaskList');
+            container.innerHTML = '';
+
+            const tasks = pet.tasks || [];
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-sm text-center py-6">No care tasks added yet. Click above to add feeding or med routines!</p>`;
+                return;
+            }
+
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-3.5 rounded-2xl border transition ${
+                    task.done ? 'bg-gray-50 border-gray-200 opacity-75' : 'bg-cozy-cream/40 border-amber-100'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTaskDone('${task.id}')"
+                               class="w-5 h-5 text-cozy-sage rounded-lg focus:ring-cozy-sage border-gray-300 cursor-pointer">
+                        <div>
+                            <span class="text-sm font-semibold text-cozy-darkText ${task.done ? 'line-through text-gray-400' : ''}">${task.title}</span>
+                            <span class="text-xs text-gray-500 block"><i class="fa-regular fa-clock mr-1"></i>${task.time || 'Anytime'}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask('${task.id}')" class="text-gray-400 hover:text-red-500 p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleTaskDone(taskId) {
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+            const t = pet.tasks.find(item => item.id === taskId);
+            if (t) {
+                t.done = !t.done;
+                saveStorage();
+                renderSchedule(pet);
+            }
+        }
+
+        function deleteTask(taskId) {
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+            pet.tasks = pet.tasks.filter(t => t.id !== taskId);
+            saveStorage();
+            renderSchedule(pet);
+            showToast("Routine deleted.");
+        }
+
+        function openAddTaskModal() {
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+        }
+
+        function handleTaskFormSubmit(e) {
+            e.preventDefault();
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+
+            if (!pet.tasks) pet.tasks = [];
+
+            pet.tasks.push({
+                id: 'task-' + Date.now(),
+                title: document.getElementById('taskTitle').value,
+                time: document.getElementById('taskTime').value,
+                done: false
+            });
+
+            saveStorage();
+            closeTaskModal();
+            renderSchedule(pet);
+            showToast("New care task added!");
+        }
+
+        function renderMilestones(pet) {
+            const container = document.getElementById('milestonesList');
+            container.innerHTML = '';
+
+            let milestones = pet.milestones;
+            if (!milestones || milestones.length === 0) {
+                pet.milestones = JSON.parse(JSON.stringify(DEFAULT_MILESTONES));
+                milestones = pet.milestones;
+                saveStorage();
+            }
+
+            const completedCount = milestones.filter(m => m.done).length;
+            document.getElementById('milestoneProgressText').innerText = `${completedCount}/${milestones.length} Completed`;
+
+            milestones.forEach(m => {
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border transition flex items-start space-x-3 ${
+                    m.done ? 'bg-teal-50/50 border-cozy-sage/40' : 'bg-white border-amber-50 hover:bg-gray-50'
+                }`;
+
+                card.innerHTML = `
+                    <input type="checkbox" ${m.done ? 'checked' : ''} onchange="toggleMilestone('${m.id}')"
+                           class="mt-1 w-5 h-5 text-cozy-sage rounded-lg focus:ring-cozy-sage border-gray-300 cursor-pointer">
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${m.category}</span>
+                            ${m.dateDone ? `<span class="text-[11px] text-cozy-sage font-medium"><i class="fa-solid fa-check mr-1"></i>${m.dateDone}</span>` : ''}
+                        </div>
+                        <h4 class="text-sm font-bold text-cozy-darkText mt-1 ${m.done ? 'line-through text-gray-500' : ''}">${m.title}</h4>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleMilestone(mId) {
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+
+            const m = pet.milestones.find(item => item.id === mId);
+            if (m) {
+                m.done = !m.done;
+                m.dateDone = m.done ? new Date().toISOString().split('T')[0] : '';
+                saveStorage();
+                renderMilestones(pet);
+                showToast(m.done ? "Milestone celebrated! 🎉" : "Milestone unchecked.");
+            }
+        }
+
+        function renderMedical(pet) {
+            const med = pet.medical || {};
+            document.getElementById('medSpayStatus').value = med.spayStatus || 'Intact (Pending)';
+            document.getElementById('medMicrochip').value = med.microchip || '';
+            document.getElementById('medVaccines').value = med.vaccines || '';
+            document.getElementById('medDeworming').value = med.deworming || '';
+            document.getElementById('medNotes').value = med.notes || '';
+        }
+
+        function saveMedicalNotes(e) {
+            e.preventDefault();
+            const pet = state.pets.find(p => p.id === state.activePetId);
+            if (!pet) return;
+
+            pet.medical = {
+                spayStatus: document.getElementById('medSpayStatus').value,
+                microchip: document.getElementById('medMicrochip').value,
+                vaccines: document.getElementById('medVaccines').value,
+                deworming: document.getElementById('medDeworming').value,
+                notes: document.getElementById('medNotes').value
+            };
+
+            saveStorage();
+            showToast("Medical records updated!");
+            renderActivePetDetail();
+        }
+
+        // Pet Modal Handler
+        function openPetModal(isEdit = false) {
+            const modal = document.getElementById('petModal');
+            const form = document.getElementById('petForm');
+            form.reset();
+
+            if (isEdit) {
+                const pet = state.pets.find(p => p.id === state.activePetId);
+                if (!pet) return;
+
+                document.getElementById('petModalTitle').innerText = "Edit Foster Profile";
+                document.getElementById('petFormId').value = pet.id;
+                document.getElementById('petName').value = pet.name;
+                document.getElementById('petBreed').value = pet.breed || '';
+                document.getElementById('petAge').value = pet.age || '';
+                document.getElementById('petIntake').value = pet.intakeDate || '';
+                document.getElementById('petTargetWeight').value = pet.targetWeight || '';
+                document.getElementById('petStatus').value = pet.status || 'Active Foster';
+                document.getElementById('petImage').value = pet.image || '';
+            } else {
+                document.getElementById('petModalTitle').innerText = "Add New Foster Pet";
+                document.getElementById('petFormId').value = '';
+                document.getElementById('petIntake').value = new Date().toISOString().split('T')[0];
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closePetModal() {
+            document.getElementById('petModal').classList.add('hidden');
+        }
+
+        function editCurrentPet() {
+            openPetModal(true);
+        }
+
+        function handlePetFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('petFormId').value;
+
+            if (id) {
+                // Edit existing
+                const pet = state.pets.find(p => p.id === id);
+                if (pet) {
+                    pet.name = document.getElementById('petName').value;
+                    pet.breed = document.getElementById('petBreed').value;
+                    pet.age = document.getElementById('petAge').value;
+                    pet.intakeDate = document.getElementById('petIntake').value;
+                    pet.targetWeight = document.getElementById('petTargetWeight').value;
+                    pet.status = document.getElementById('petStatus').value;
+                    pet.image = document.getElementById('petImage').value;
+                }
+                showToast("Profile updated!");
+            } else {
+                // Add new
+                const newId = 'foster-' + Date.now();
+                const newPet = {
+                    id: newId,
+                    name: document.getElementById('petName').value,
+                    breed: document.getElementById('petBreed').value,
+                    age: document.getElementById('petAge').value,
+                    intakeDate: document.getElementById('petIntake').value,
+                    targetWeight: document.getElementById('petTargetWeight').value,
+                    status: document.getElementById('petStatus').value,
+                    image: document.getElementById('petImage').value,
+                    logs: [],
+                    tasks: [
+                        { id: 't1', title: 'Morning Feeding & Weigh-in', time: '8:00 AM', done: false },
+                        { id: 't2', title: 'Evening Feeding', time: '8:00 PM', done: false }
+                    ],
+                    milestones: JSON.parse(JSON.stringify(DEFAULT_MILESTONES)),
+                    medical: { spayStatus: 'Intact (Pending)', microchip: '', vaccines: '', deworming: '', notes: '' }
+                };
+
+                state.pets.push(newPet);
+                state.activePetId = newId;
+                showToast("New foster profile added!");
+            }
+
+            saveStorage();
+            closePetModal();
+            renderRoster();
+            renderActivePetDetail();
+        }
+
+        function deleteCurrentPet() {
+            if (!state.activePetId) return;
+            const pet = state.pets.find(p => p.id === state.activePetId);
+
+            if (confirm(`Are you sure you want to delete profile for "${pet.name}"?`)) {
+                state.pets = state.pets.filter(p => p.id !== state.activePetId);
+                state.activePetId = state.pets.length > 0 ? state.pets[0].id : null;
+                saveStorage();
+                showToast("Foster profile removed.");
+                renderRoster();
+                renderActivePetDetail();
+            }
+        }
+
+        // Export Data JSON
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.pets, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `foster_care_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+    </script>
+</body>
+</html>
