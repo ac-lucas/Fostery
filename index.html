@@ -72,28 +72,26 @@
             color: #84A59D;
             font-weight: 600;
         }
-        .safe-area-pb {
-            padding-bottom: env(safe-area-inset-bottom, 1rem);
-        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col pb-20 lg:pb-0">
+<body class="min-h-screen flex flex-col">
 
+    <!-- Navigation Header -->
     <header class="bg-white border-b border-amber-100 sticky top-0 z-30 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <!-- App Logo & Title -->
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="showRosterView()">
                     <div class="bg-cozy-sage text-white p-2 sm:p-2.5 rounded-2xl shadow-sm">
                         <i class="fa-solid fa-paw text-lg sm:text-xl"></i>
                     </div>
                     <div>
                         <span class="font-display text-xl sm:text-2xl font-bold text-cozy-darkText tracking-wide">Fostery</span>
-                        <p class="text-[11px] text-gray-500 hidden sm:block">Foster Pet Tracker & Cloud Log</p>
+                        <p class="text-[11px] text-gray-500 hidden sm:block">Foster Pet Tracker & Care Log</p>
                     </div>
                 </div>
 
-                <!-- Right Header Actions & User Auth State -->
+                <!-- Right Header Actions & Auth State -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
                     <!-- User Auth Info Pill -->
                     <div id="userInfoPill" class="hidden flex items-center space-x-2 bg-cozy-cream/80 px-2.5 py-1 rounded-full text-xs font-medium text-cozy-darkText border border-amber-200">
@@ -120,6 +118,7 @@
         </div>
     </header>
 
+    <!-- Auth Overlay Screen -->
     <div id="authOverlayScreen" class="hidden fixed inset-0 bg-cozy-bg/95 z-40 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-lg border border-amber-100 text-center space-y-6">
             <div class="w-20 h-20 bg-cozy-cream text-cozy-sage rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
@@ -127,64 +126,55 @@
             </div>
             <div>
                 <h2 class="text-2xl font-bold text-cozy-darkText">Welcome to Fostery</h2>
-                <p class="text-gray-500 text-xs sm:text-sm mt-2">Sign in with your authorized Google Account to access your foster database in Realtime Database.</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-2">Sign in with your Google Account to access your foster database synchronized across devices.</p>
             </div>
             <button onclick="handleGoogleSignIn()" class="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-2xl border border-gray-300 shadow-sm flex items-center justify-center space-x-3 transition">
                 <i class="fa-brands fa-google text-red-500 text-lg"></i>
                 <span>Sign in with Google</span>
             </button>
-            <p class="text-[11px] text-gray-400">Database permissions are restricted to your registered Google UID.</p>
         </div>
     </div>
 
+    <!-- Main Workspace -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
 
-        <!-- Roster Filter & Pet Picker Header Bar -->
+        <!-- Roster Filter Header Bar -->
         <div class="mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-amber-50">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <!-- Roster Status Filter Pills -->
-                <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 custom-scrollbar">
+            <div class="flex items-center justify-between">
+                <!-- Status Filter Pills -->
+                <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 custom-scrollbar w-full">
                     <button onclick="filterStatus('all')" id="filter-all" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap">All (<span id="count-all">0</span>)</button>
                     <button onclick="filterStatus('Incoming')" id="filter-incoming" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Incoming (<span id="count-incoming">0</span>)</button>
                     <button onclick="filterStatus('Current')" id="filter-current" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Current (<span id="count-current">0</span>)</button>
                     <button onclick="filterStatus('Former')" id="filter-former" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap">Former (<span id="count-former">0</span>)</button>
                 </div>
-
-                <!-- Pet Selector Dropdown (Quick Switcher) -->
-                <div class="flex items-center space-x-2">
-                    <label class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Active:</label>
-                    <select id="activePetSelect" onchange="selectActivePet(this.value)" class="w-full md:w-auto bg-cozy-cream text-cozy-darkText border-none text-xs sm:text-sm font-medium rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none cursor-pointer">
-                    </select>
-                </div>
             </div>
         </div>
 
-        <!-- Main Grid Container -->
+        <!-- Main Workspace Grid -->
         <div id="mainDashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            <!-- Left Sidebar Roster List -->
+            <!-- Roster List Sidebar -->
             <div id="rosterSidebar" class="lg:col-span-4 space-y-3">
                 <div class="flex items-center justify-between px-1">
                     <h2 class="text-base sm:text-lg font-bold text-cozy-darkText">Foster Roster</h2>
-                    <span id="syncStatusBadge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Firebase Synced
-                    </span>
+                    <span class="text-xs text-gray-400" id="rosterSubtext">Select a foster to view details</span>
                 </div>
 
-                <div id="rosterCardsList" class="space-y-2.5 max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar pr-1">
+                <div id="rosterCardsList" class="space-y-2.5 max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar pr-1">
                 </div>
             </div>
 
-            <!-- Right Detail Workspace -->
-            <div id="detailWorkspace" class="lg:col-span-8">
+            <!-- Detail Workspace (Hidden on mobile by default when viewing roster) -->
+            <div id="detailWorkspace" class="hidden lg:block lg:col-span-8">
 
-                <!-- Empty State View -->
+                <!-- No Pet Selected View -->
                 <div id="noPetSelectedView" class="hidden bg-white rounded-3xl p-8 sm:p-12 text-center border border-dashed border-gray-300 shadow-sm">
                     <div class="w-16 sm:w-20 h-16 sm:h-20 bg-amber-50 text-cozy-sage rounded-full flex items-center justify-center mx-auto mb-4 text-2xl sm:text-3xl">
                         <i class="fa-solid fa-cat"></i>
                     </div>
                     <h3 class="text-lg sm:text-xl font-bold text-gray-700 mb-2">No Foster Pet Selected</h3>
-                    <p class="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mb-6">Select a foster pet from your roster, or create a new profile to start logging weights and care routines.</p>
+                    <p class="text-gray-500 text-xs sm:text-sm max-w-md mx-auto mb-6">Select a foster pet from your roster, or create a new profile to start logging daily progress.</p>
                     <button onclick="openPetModal()" class="bg-cozy-sage text-white px-5 py-2.5 rounded-xl font-medium shadow hover:bg-cozy-sageDark transition text-xs sm:text-sm">
                         <i class="fa-solid fa-plus mr-2"></i>Add First Foster
                     </button>
@@ -192,6 +182,14 @@
 
                 <!-- Active Foster Workstation -->
                 <div id="petDetailWorkspace" class="space-y-4 sm:space-y-6">
+
+                    <!-- Prominent Header Navigation / Back Button -->
+                    <div class="flex items-center justify-between mb-2">
+                        <button onclick="showRosterView()" class="inline-flex items-center space-x-2 px-3.5 py-2 bg-white hover:bg-cozy-cream border border-amber-200 text-cozy-darkText rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition">
+                            <i class="fa-solid fa-arrow-left text-cozy-sage"></i>
+                            <span>Back to Foster Roster</span>
+                        </button>
+                    </div>
 
                     <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-amber-50 relative">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -204,13 +202,13 @@
                                     </div>
                                     <p id="detailBreedAge" class="text-xs sm:text-sm text-gray-500 mt-0.5">Kitten • ~4 Weeks</p>
 
-                                    <!-- Sibling / Littermate Tags Display -->
+                                    <!-- Sibling / Littermate Tags -->
                                     <div id="siblingsBadgeContainer" class="mt-2 flex flex-wrap items-center gap-1.5">
                                     </div>
 
                                     <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] sm:text-xs text-gray-600 mt-2">
                                         <span><i class="fa-solid fa-calendar-check text-cozy-sage mr-1"></i>Intake: <strong id="detailIntake">---</strong></span>
-                                        <span><i class="fa-solid fa-bullseye text-cozy-coral mr-1"></i>Target: <strong id="detailTarget">---</strong></span>
+                                        <span><i class="fa-solid fa-bullseye text-cozy-coral mr-1"></i>Target Weight: <strong id="detailTarget">---</strong></span>
                                         <span><i class="fa-solid fa-microchip text-indigo-400 mr-1"></i>Microchip: <strong id="detailMicrochip">---</strong></span>
                                     </div>
                                 </div>
@@ -255,13 +253,13 @@
                                 <form id="dailyLogForm" onsubmit="saveDailyLog(event)" class="space-y-3">
                                     <div>
                                         <label class="block text-[11px] font-semibold text-gray-600 mb-1">Date & Time</label>
-                                        <input type="datetime-local" id="logDateTime" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                        <input type="datetime-local" id="logDateTime" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                     </div>
 
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Weight</label>
-                                            <input type="number" step="0.1" id="logWeight" placeholder="e.g. 450" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">Weight (Optional)</label>
+                                            <input type="number" step="0.1" id="logWeight" placeholder="e.g. 450" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                                         </div>
                                         <div>
                                             <label class="block text-[11px] font-semibold text-gray-600 mb-1">Unit</label>
@@ -305,7 +303,7 @@
                                     </div>
 
                                     <button type="submit" class="w-full bg-cozy-sage hover:bg-cozy-sageDark text-white font-medium py-2 rounded-xl text-xs sm:text-sm transition shadow-sm">
-                                        Save Entry
+                                        Save Log Entry
                                     </button>
                                 </form>
                             </div>
@@ -314,7 +312,7 @@
                             <div class="md:col-span-7 bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-amber-50 flex flex-col justify-between">
                                 <div class="flex justify-between items-center mb-2">
                                     <h3 class="text-sm sm:text-base font-bold text-cozy-darkText flex items-center gap-2">
-                                        <i class="fa-solid fa-chart-area text-cozy-coral"></i> Weight Chart
+                                        <i class="fa-solid fa-chart-area text-cozy-coral"></i> Weight Growth Chart
                                     </h3>
                                     <span class="text-[10px] sm:text-xs text-gray-400">Target Line</span>
                                 </div>
@@ -378,14 +376,6 @@
 
                             <div id="milestonesList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             </div>
-
-                            <div id="nonKittenMilestoneNotice" class="hidden text-center py-8">
-                                <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
-                                    <i class="fa-solid fa-paw"></i>
-                                </div>
-                                <h4 class="text-sm font-bold text-gray-700">Kitten Milestones</h4>
-                                <p class="text-gray-500 text-xs max-w-xs mx-auto mt-1">Milestones are tailored for kittens. To enable, set this foster's species/type to <strong>Kitten</strong> in their profile settings.</p>
-                            </div>
                         </div>
                     </div>
 
@@ -439,23 +429,6 @@
         </div>
     </main>
 
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-amber-100 z-30 px-4 py-2 safe-area-pb shadow-lg flex justify-around items-center">
-        <button onclick="toggleMobileRosterView()" id="mobileNavRoster" class="flex flex-col items-center text-cozy-sage font-semibold text-[10px]">
-            <i class="fa-solid fa-list-ul text-lg"></i>
-            <span>Roster</span>
-        </button>
-        <button onclick="openPetModal()" class="flex flex-col items-center text-gray-500 font-medium text-[10px] hover:text-cozy-sage">
-            <div class="bg-cozy-sage text-white p-2 rounded-full -mt-5 border-2 border-white shadow-md">
-                <i class="fa-solid fa-plus text-base"></i>
-            </div>
-            <span class="mt-0.5">Add Foster</span>
-        </button>
-        <button onclick="toggleMobileDetailView()" id="mobileNavDetails" class="flex flex-col items-center text-gray-500 font-medium text-[10px]">
-            <i class="fa-solid fa-notes-medical text-lg"></i>
-            <span>Active Profile</span>
-        </button>
-    </div>
-
     <!-- MODAL: Add / Edit Foster Pet -->
     <div id="petModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
         <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -478,14 +451,11 @@
                         <select id="petSpecies" required class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                             <option value="Kitten">Kitten</option>
                             <option value="Cat">Adult Cat</option>
-                            <option value="Puppy">Puppy</option>
-                            <option value="Dog">Adult Dog</option>
-                            <option value="Other">Other Small Animal</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Estimated Age</label>
-                        <input type="text" id="petAge" placeholder="e.g. 4 Weeks" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <input type="text" id="petAge" placeholder="e.g. 4 Weeks or 2 Years" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                     </div>
                 </div>
 
@@ -496,7 +466,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Target Weight</label>
-                        <input type="text" id="petTargetWeight" placeholder="e.g. 900 or 2lbs" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
+                        <input type="text" id="petTargetWeight" placeholder="e.g. 900 or 9 lbs" class="w-full text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-cozy-sage outline-none">
                     </div>
                 </div>
 
@@ -562,13 +532,13 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toastBox" class="fixed bottom-16 lg:bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-cozy-darkText text-white px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-3 text-xs sm:text-sm">
+    <div id="toastBox" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-cozy-darkText text-white px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-3 text-xs sm:text-sm">
         <i id="toastIcon" class="fa-solid fa-circle-check text-cozy-sage"></i>
         <span id="toastMsg">Action saved successfully!</span>
     </div>
 
     <script>
-        // --- FIREBASE CONFIGURATION & INITIALIZATION ---
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyDqPjoCg0gYKmxBkF3-7eqYilmLdJqvGU8",
             authDomain: "house-motives.firebaseapp.com",
@@ -588,10 +558,10 @@
             user: null,
             pets: [],
             activePetId: null,
-            filterStatus: 'all',
+            filterStatus: 'Current',
             activeTab: 'dailyLog',
             tempBase64Image: '',
-            mobileView: 'roster' // 'roster' or 'detail'
+            hasUserModifiedTime: false
         };
 
         let weightChartInstance = null;
@@ -608,7 +578,7 @@
             { id: 'm9', title: 'Reached Target Adoption Weight (2 lbs)', category: 'Milestone', done: false, dateDone: '' }
         ];
 
-        // Default seed data for initial view or offline fallback
+        // Seed data for initial fallback
         const SEED_PETS = [
             {
                 id: 'foster-mochi',
@@ -650,12 +620,9 @@
             }
         ];
 
-        // Window Load Lifecycle
         window.onload = function() {
-            // Set Default DateTime Picker
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('logDateTime').value = now.toISOString().slice(0,16);
+            resetLogTimeField();
+            attachDynamicTimeListeners();
 
             // Listen for Auth State Changes
             auth.onAuthStateChanged(user => {
@@ -666,13 +633,35 @@
                 } else {
                     state.user = null;
                     updateUserUI(false);
-                    // Fallback to local storage or seed data when unauthenticated
                     loadLocalStorage();
                 }
             });
         };
 
-        // --- FIREBASE AUTHENTICATION & LISTENERS ---
+        // Set or refresh log entry date-time picker
+        function resetLogTimeField() {
+            if (state.hasUserModifiedTime) return;
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('logDateTime').value = now.toISOString().slice(0, 16);
+        }
+
+        // Auto-refresh log time when user interacts with inputs (unless manually edited)
+        function attachDynamicTimeListeners() {
+            const formInputs = document.querySelectorAll('#dailyLogForm input, #dailyLogForm select, #dailyLogForm textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    if (!state.hasUserModifiedTime) {
+                        resetLogTimeField();
+                    }
+                });
+            });
+
+            document.getElementById('logDateTime').addEventListener('change', () => {
+                state.hasUserModifiedTime = true;
+            });
+        }
+
         function handleGoogleSignIn() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).then(result => {
@@ -693,7 +682,6 @@
             const authOverlay = document.getElementById('authOverlayScreen');
             const signInBtn = document.getElementById('googleSignInBtn');
             const userPill = document.getElementById('userInfoPill');
-            const syncBadge = document.getElementById('syncStatusBadge');
 
             if (isLoggedIn && state.user) {
                 authOverlay.classList.add('hidden');
@@ -701,25 +689,21 @@
                 userPill.classList.remove('hidden');
                 document.getElementById('userName').innerText = state.user.displayName || state.user.email;
                 document.getElementById('userAvatar').src = state.user.photoURL || `https://placehold.co/100x100/84A59D/ffffff?text=U`;
-                syncBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> RTDB Synced`;
             } else {
                 authOverlay.classList.remove('hidden');
                 signInBtn.classList.remove('hidden');
                 userPill.classList.add('hidden');
-                syncBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Local Cache`;
             }
         }
 
         function attachFirebaseListeners() {
             if (!state.user) return;
-            // Listening on /fosters path in Realtime Database
             const fostersRef = db.ref(`fosters/${state.user.uid}`);
             fostersRef.on('value', snapshot => {
                 const data = snapshot.val();
                 if (data) {
                     state.pets = Array.isArray(data) ? data : Object.values(data);
                 } else {
-                    // Seed initial data to RTDB if empty
                     state.pets = SEED_PETS;
                     saveToDatabase();
                 }
@@ -729,7 +713,9 @@
                 }
 
                 renderRoster();
-                renderActivePetDetail();
+                if (state.activePetId) {
+                    renderActivePetDetail();
+                }
             });
         }
 
@@ -750,7 +736,9 @@
             }
             if (state.pets.length > 0) state.activePetId = state.pets[0].id;
             renderRoster();
-            renderActivePetDetail();
+            if (state.activePetId) {
+                renderActivePetDetail();
+            }
         }
 
         function showToast(msg) {
@@ -762,6 +750,7 @@
             }, 3000);
         }
 
+        // Filter button click handler - returns user to the main list
         function filterStatus(status) {
             state.filterStatus = status;
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -777,14 +766,25 @@
                 const el = document.getElementById(activeMap[status]);
                 if (el) el.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap";
             }
+            
+            showRosterView();
             renderRoster();
+        }
+
+        // Navigation helpers between detail & roster view
+        function showRosterView() {
+            document.getElementById('rosterSidebar').classList.remove('hidden');
+            document.getElementById('detailWorkspace').classList.add('hidden');
+        }
+
+        function showDetailView() {
+            document.getElementById('rosterSidebar').classList.add('hidden');
+            document.getElementById('detailWorkspace').classList.remove('hidden');
         }
 
         function renderRoster() {
             const container = document.getElementById('rosterCardsList');
-            const selectDropdown = document.getElementById('activePetSelect');
             container.innerHTML = '';
-            selectDropdown.innerHTML = '';
 
             let filtered = state.pets;
             if (state.filterStatus !== 'all') {
@@ -796,29 +796,36 @@
             document.getElementById('count-current').innerText = state.pets.filter(p => p.status === 'Current').length;
             document.getElementById('count-former').innerText = state.pets.filter(p => p.status === 'Former').length;
 
+            // Highlight current active filter button styling
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 whitespace-nowrap";
+            });
+            const activeMap = {
+                'all': 'filter-all',
+                'Incoming': 'filter-incoming',
+                'Current': 'filter-current',
+                'Former': 'filter-former'
+            };
+            if (activeMap[state.filterStatus]) {
+                const el = document.getElementById(activeMap[state.filterStatus]);
+                if (el) el.className = "filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-cozy-sage text-white whitespace-nowrap";
+            }
+
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="p-6 text-center text-gray-400 bg-white rounded-2xl text-xs sm:text-sm">No fosters in this status.</div>`;
             }
 
-            state.pets.forEach(pet => {
-                const opt = document.createElement('option');
-                opt.value = pet.id;
-                opt.innerText = `${pet.name} (${pet.status})`;
-                if (pet.id === state.activePetId) opt.selected = true;
-                selectDropdown.appendChild(opt);
-            });
-
             filtered.forEach(pet => {
                 const isSelected = pet.id === state.activePetId;
-                const latestLog = pet.logs && pet.logs.length > 0 ? pet.logs[pet.logs.length - 1] : null;
-                const weightDisplay = latestLog ? `${latestLog.weight}${latestLog.unit}` : 'No logs';
+                const weightLogs = (pet.logs || []).filter(l => l.weight !== undefined && l.weight !== null && l.weight !== '');
+                const latestWeightLog = weightLogs.length > 0 ? weightLogs[weightLogs.length - 1] : null;
+                const weightDisplay = latestWeightLog ? `${latestWeightLog.weight} ${latestWeightLog.unit || 'g'}` : 'No logs';
 
                 const card = document.createElement('div');
                 card.onclick = () => {
                     selectActivePet(pet.id);
-                    if (window.innerWidth < 1024) toggleMobileDetailView();
                 };
-                card.className = `p-3 rounded-2xl cursor-pointer transition flex items-center justify-between ${
+                card.className = `p-3.5 rounded-2xl cursor-pointer transition flex items-center justify-between ${
                     isSelected ? 'bg-cozy-cream border-2 border-cozy-sage shadow-sm' : 'bg-white hover:bg-amber-50/50 border border-amber-50'
                 }`;
 
@@ -826,10 +833,10 @@
 
                 card.innerHTML = `
                     <div class="flex items-center space-x-3 min-w-0">
-                        <img src="${avatarSrc}" alt="${pet.name}" class="w-11 h-11 rounded-xl object-cover border border-amber-100 bg-gray-50 flex-shrink-0">
+                        <img src="${avatarSrc}" alt="${pet.name}" class="w-12 h-12 rounded-xl object-cover border border-amber-100 bg-gray-50 flex-shrink-0">
                         <div class="min-w-0">
                             <h4 class="font-bold text-cozy-darkText text-xs sm:text-sm truncate">${pet.name}</h4>
-                            <p class="text-[11px] text-gray-500 truncate">${pet.species || 'Foster'}</p>
+                            <p class="text-[11px] text-gray-500 truncate">${pet.species || 'Kitten'}</p>
                             <span class="inline-block text-[10px] px-2 py-0.5 mt-0.5 rounded-full ${getStatusBadgeClass(pet.status)}">
                                 ${pet.status}
                             </span>
@@ -857,22 +864,7 @@
             state.activePetId = id;
             renderRoster();
             renderActivePetDetail();
-        }
-
-        function toggleMobileRosterView() {
-            state.mobileView = 'roster';
-            document.getElementById('rosterSidebar').classList.remove('hidden');
-            document.getElementById('detailWorkspace').classList.add('hidden');
-            document.getElementById('mobileNavRoster').className = "flex flex-col items-center text-cozy-sage font-semibold text-[10px]";
-            document.getElementById('mobileNavDetails').className = "flex flex-col items-center text-gray-500 font-medium text-[10px]";
-        }
-
-        function toggleMobileDetailView() {
-            state.mobileView = 'detail';
-            document.getElementById('rosterSidebar').classList.add('hidden');
-            document.getElementById('detailWorkspace').classList.remove('hidden');
-            document.getElementById('mobileNavRoster').className = "flex flex-col items-center text-gray-500 font-medium text-[10px]";
-            document.getElementById('mobileNavDetails').className = "flex flex-col items-center text-cozy-sage font-semibold text-[10px]";
+            showDetailView();
         }
 
         function renderActivePetDetail() {
@@ -891,7 +883,7 @@
 
             document.getElementById('detailName').innerText = pet.name;
             document.getElementById('detailImg').src = pet.image || `https://placehold.co/150x150/84A59D/ffffff?text=${pet.name.charAt(0)}`;
-            document.getElementById('detailBreedAge').innerText = `${pet.species || 'Foster'} • ${pet.age || 'Age N/A'}`;
+            document.getElementById('detailBreedAge').innerText = `${pet.species || 'Kitten'} • ${pet.age || 'Age N/A'}`;
             document.getElementById('detailIntake').innerText = pet.intakeDate || 'N/A';
             document.getElementById('detailTarget').innerText = pet.targetWeight ? `${pet.targetWeight}` : 'Not set';
             document.getElementById('detailMicrochip').innerText = pet.medical?.microchip || 'N/A';
@@ -900,9 +892,18 @@
             badge.innerText = pet.status;
             badge.className = `px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getStatusBadgeClass(pet.status)}`;
 
-            // Render Linked Siblings Badges
-            renderSiblingsBadges(pet);
+            // Hide or Show Kitten Milestones tab depending on species
+            const milestonesTabBtn = document.getElementById('tab-milestones');
+            if (pet.species === 'Cat') {
+                milestonesTabBtn.classList.add('hidden');
+                if (state.activeTab === 'milestones') {
+                    switchTab('dailyLog');
+                }
+            } else {
+                milestonesTabBtn.classList.remove('hidden');
+            }
 
+            renderSiblingsBadges(pet);
             renderTabContent();
         }
 
@@ -951,7 +952,7 @@
                 renderDailyLogsAndChart(pet);
             } else if (state.activeTab === 'schedule') {
                 renderSchedule(pet);
-            } else if (state.activeTab === 'milestones') {
+            } else if (state.activeTab === 'milestones' && pet.species !== 'Cat') {
                 renderMilestones(pet);
             } else if (state.activeTab === 'medical') {
                 renderMedical(pet);
@@ -971,9 +972,11 @@
                     const tr = document.createElement('tr');
                     tr.className = "hover:bg-amber-50/40 transition";
                     const formattedDate = new Date(log.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+                    const weightVal = (log.weight !== undefined && log.weight !== null && log.weight !== '') ? `${log.weight} ${log.unit || 'g'}` : '-';
+
                     tr.innerHTML = `
                         <td class="p-2.5 font-medium text-gray-700 whitespace-nowrap">${formattedDate}</td>
-                        <td class="p-2.5 font-bold text-cozy-sage whitespace-nowrap">${log.weight} ${log.unit}</td>
+                        <td class="p-2.5 font-bold text-cozy-sage whitespace-nowrap">${weightVal}</td>
                         <td class="p-2.5 text-gray-600">${log.food || '-'}</td>
                         <td class="p-2.5"><span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-[10px]">${log.bowel || 'Normal'}</span></td>
                         <td class="p-2.5 text-gray-600">${log.demeanor || '-'}</td>
@@ -993,10 +996,13 @@
             const ctx = document.getElementById('weightChart').getContext('2d');
             const logs = pet.logs || [];
 
-            const labels = logs.map(l => new Date(l.dateTime).toLocaleDateString([], { month: 'numeric', day: 'numeric' }));
-            const weights = logs.map(l => l.weight);
+            // Filter out logs where weight was omitted
+            const validWeightLogs = logs.filter(l => l.weight !== undefined && l.weight !== null && l.weight !== '');
+
+            const labels = validWeightLogs.map(l => new Date(l.dateTime).toLocaleDateString([], { month: 'numeric', day: 'numeric' }));
+            const weights = validWeightLogs.map(l => parseFloat(l.weight));
             const targetVal = parseFloat(pet.targetWeight) || null;
-            const targetLine = targetVal ? logs.map(() => targetVal) : [];
+            const targetLine = targetVal ? validWeightLogs.map(() => targetVal) : [];
 
             if (weightChartInstance) {
                 weightChartInstance.destroy();
@@ -1005,10 +1011,10 @@
             weightChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels.length ? labels : ['No Data'],
+                    labels: labels.length ? labels : ['No Weight Recorded'],
                     datasets: [
                         {
-                            label: `Weight (${logs[0]?.unit || 'g'})`,
+                            label: `Weight (${validWeightLogs[0]?.unit || 'g'})`,
                             data: weights.length ? weights : [0],
                             borderColor: '#84A59D',
                             backgroundColor: 'rgba(132, 165, 157, 0.15)',
@@ -1051,10 +1057,12 @@
 
             if (!pet.logs) pet.logs = [];
 
+            const weightRaw = document.getElementById('logWeight').value;
+
             const newLog = {
                 id: 'log-' + Date.now(),
                 dateTime: document.getElementById('logDateTime').value,
-                weight: parseFloat(document.getElementById('logWeight').value),
+                weight: weightRaw !== '' ? parseFloat(weightRaw) : null,
                 unit: document.getElementById('logWeightUnit').value,
                 food: document.getElementById('logFood').value,
                 bowel: document.getElementById('logBowel').value,
@@ -1066,8 +1074,12 @@
             saveToDatabase();
             showToast("Daily log recorded!");
 
+            document.getElementById('logWeight').value = '';
             document.getElementById('logFood').value = '';
             document.getElementById('logNotes').value = '';
+
+            state.hasUserModifiedTime = false;
+            resetLogTimeField();
 
             renderRoster();
             renderActivePetDetail();
@@ -1169,21 +1181,7 @@
 
         function renderMilestones(pet) {
             const container = document.getElementById('milestonesList');
-            const header = document.getElementById('milestonesKittenHeader');
-            const notice = document.getElementById('nonKittenMilestoneNotice');
-
             container.innerHTML = '';
-
-            const isKitten = pet.species === 'Kitten';
-
-            if (!isKitten) {
-                header.classList.add('hidden');
-                notice.classList.remove('hidden');
-                return;
-            }
-
-            header.classList.remove('hidden');
-            notice.classList.add('hidden');
 
             let milestones = pet.milestones;
             if (!milestones || milestones.length === 0) {
@@ -1341,7 +1339,6 @@
             e.preventDefault();
             const id = document.getElementById('petFormId').value;
 
-            // Gather selected sibling IDs
             const siblingCheckboxes = document.querySelectorAll('input[name="siblingPets"]:checked');
             const selectedSiblingIds = Array.from(siblingCheckboxes).map(cb => cb.value);
 
@@ -1361,9 +1358,7 @@
                     }
                 }
 
-                // Two-way sibling link sync
                 syncTwoWaySiblingLinks(id, selectedSiblingIds);
-
                 showToast("Profile updated!");
             } else {
                 // Add new
@@ -1399,6 +1394,7 @@
             closePetModal();
             renderRoster();
             renderActivePetDetail();
+            showDetailView();
         }
 
         function syncTwoWaySiblingLinks(petId, siblingIds) {
@@ -1430,7 +1426,7 @@
                 saveToDatabase();
                 showToast("Foster profile deleted.");
                 renderRoster();
-                renderActivePetDetail();
+                showRosterView();
             }
         }
     </script>
